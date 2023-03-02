@@ -1,0 +1,46 @@
+name: "mindagap"
+description: Takes a single panorama image and fills the empty grid lines with neighbour-weighted values.
+keywords:
+  - imaging
+  - resolve_bioscience
+  - spatial_transcriptomics
+tools:
+  - "mindagap":
+      description: ""
+      homepage: "https://github.com/ViriatoII/MindaGap"
+      documentation: ""
+      tool_dev_url: ""
+      doi: ""
+      licence: "BSD-3-Clause license"
+
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy Map containing sample information
+        e.g. [ id:'test', single_end:false ]
+  - tiff:
+      type: file
+      description: A tiffile containing gridlines as produced by Molecular Cartography imaging.
+      pattern: "*.{tiff}"
+
+output:
+  - meta:
+      type: map
+      description: |
+        Groovy Map containing sample information
+        e.g. [ id:'test', single_end:false ]
+
+  - versions:
+      type: file
+      description: File containing software versions
+      pattern: "versions.yml"
+
+  - tiff:
+      type: file
+      description: tiff file
+      pattern: "*.{tiff}"
+
+authors:
+  - "@ViriatoII"
+  - "@flowuenne"
