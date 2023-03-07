@@ -68,7 +68,7 @@ process RSTR_SPOTS{
 
 process MKIMG_STACKS{
     
-    container 'kbestak/tiff_to_hdf5:v0.0.1'
+    container 'rasterize_spots:latest'
     
     input:
     tuple val(meta), val(stacks)
@@ -89,7 +89,7 @@ process TIFF_TO_H5{
     tuple val(meta), path(image_stack)
 
     output:
-    path("${meta.id}.stack.hdf5"), emit: hdf5
+    tuple val(meta), path("${meta.id}.stack.hdf5"), emit: hdf5
 
     script:
     """
@@ -97,13 +97,11 @@ process TIFF_TO_H5{
     --input $image_stack \
     --output . \
     --axes 'tzyxc' \
-    --channelIDs 1 2 3
+    --channelIDs 1 2 3 4 5
     """
 }
 
 workflow {
-    // Identify marker information
-    //chMrk = Channel.fromPath( "${params.in}/markers.csv", checkIfExists: true )
 
     samples = Channel.fromPath(params.sample_sheet)
         .splitCsv(header: true, strip : true)
@@ -137,10 +135,17 @@ workflow {
     TIFF_TO_H5(MKIMG_STACKS.out.mcimage)
 
     // Run ilastik pixel classification on image stacks
-    // ILASTIK_PIXELCLASSIFICATION()
+    ILASTIK_PIXELCLASSIFICATION(
+        TIFF_TO_H5.out.hdf5,
+        tuple([id:"ilastik project"],params.ilastik_pixelprob_model),
+        )
 
     // Run ilastik multicut on boundery information from probability maps created in previous step
-    // ILASTIK_MULTICUT()
+    ILASTIK_MULTICUT(
+        TIFF_TO_H5.out.hdf5,
+        tuple([id:"ilastik project"],params.ilastik_multicut_model),
+        ILASTIK_PIXELCLASSIFICATION.out.output
+        )
 
     // Quantify Ilastik
     // QUANTIFICATION()

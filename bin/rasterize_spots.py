@@ -13,7 +13,7 @@ import torch.nn as nn
 import numpy as np
 import tifffile
 from rich.progress import track
-#import concurrent.futures
+from aicsimageio.writers import OmeTiffWriter
 
 # Make a function to project a table of spots with x,y coordinates onto a 2d plane based on reference image shape and add any duplicate spots to increase their pixel value in the output image
 def project_spots(spot_table,img):
@@ -121,4 +121,7 @@ if __name__ == "__main__":
     spot_2d_stack = np.stack(spots_2d_list_exp10, axis=0)
 
     # # Use tifffile to write the image stack to disk 
-    tifffile.imwrite(args.output, spot_2d_stack, metadata={'axes': 'CYX'})
+    #tifffile.imwrite(args.output, spot_2d_stack, metadata={'axes': 'CYX'})
+    OmeTiffWriter.save(spot_2d_stack,
+                       args.output, 
+                       dim_order = "CYX")

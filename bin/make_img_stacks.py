@@ -5,6 +5,7 @@
 import numpy as np
 import argparse
 import tifffile
+from aicsimageio.writers import OmeTiffWriter
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -26,6 +27,7 @@ if __name__ == "__main__":
     # Use tifffile to read an arbitrary number of images into a list
     ### ! Maybe replace this with dask to reduce memory usage
     img_list = [tifffile.imread(img) for img in args.input]
+
     
     ## Create an empty list
     img_ch = []
@@ -40,7 +42,10 @@ if __name__ == "__main__":
         else:
             img_ch.append(img)
     
+    #### ! Optimize this function, as it is currently will fail if using a lot of images
     img_stack = np.stack(img_ch, axis=0) ## Stack all final images into a single image stack
-    
+
     # Use tifffile to write the image stack to disk
-    tifffile.imwrite(args.output, img_stack, metadata={'axes': 'CYX'})
+    OmeTiffWriter.save(img_stack, 
+                       args.output, 
+                       dim_order = "CYX")
