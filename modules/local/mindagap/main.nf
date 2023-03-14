@@ -2,7 +2,7 @@ process MINDAGAP {
     tag "$meta.id"
     label 'process_low'
 
-    container "rguerr/mindagap:latest"
+    container "mindagap:latest"
 
     input:
     tuple val(meta), path(tiff)
