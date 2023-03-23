@@ -6,10 +6,10 @@ keywords:
   - spatial_transcriptomics
 tools:
   - "mindagap":
-      description: ""
+      description: "Mindagap is a collection of tools to process multiplexed FISH data, such as produced by Resolve Biosciences Molecular Cartography."
       homepage: "https://github.com/ViriatoII/MindaGap"
-      documentation: ""
-      tool_dev_url: ""
+      documentation: "https://github.com/ViriatoII/MindaGap/blob/main/README.md"
+      tool_dev_url: "https://github.com/ViriatoII/MindaGap"
       doi: ""
       licence: "BSD-3-Clause license"
 
@@ -21,8 +21,11 @@ input:
         e.g. [ id:'test', single_end:false ]
   - tiff:
       type: file
-      description: A tiffile containing gridlines as produced by Molecular Cartography imaging.
+      description: A tiff file containing gridlines as produced by Molecular Cartography imaging.
       pattern: "*.{tiff}"
+
+  # args = optional arguments
+  # args2 = positional arguments s (box size for gaussian kernel) and r (number of rounds to apply gaussianBlur)
 
 output:
   - meta:
@@ -38,7 +41,7 @@ output:
 
   - tiff:
       type: file
-      description: tiff file
+      description: A tiff file with gridlines filled based on consecutive gaussian blurring.
       pattern: "*.{tiff}"
 
 authors:

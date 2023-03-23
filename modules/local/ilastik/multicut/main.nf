@@ -15,7 +15,7 @@ process ILASTIK_MULTICUT {
     tuple val(meta3), path (probs)
 
     output:
-    tuple val(meta), path("*.tiff") , emit: out_tiff
+    tuple val(meta), path("*.tif") , emit: out_tiff
     path "versions.yml"             , emit: versions
 
     when:
@@ -33,7 +33,7 @@ process ILASTIK_MULTICUT {
         --raw_data=$h5 \\
         --probabilities=$probs \\
         --export_source="Multicut Segmentation" \\
-        --output_filename_format=${prefix}.tiff \\
+        --output_filename_format=${prefix}.tif \\
         $args
 
     cat <<-END_VERSIONS > versions.yml

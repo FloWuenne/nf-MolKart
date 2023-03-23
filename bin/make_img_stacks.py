@@ -46,7 +46,6 @@ if __name__ == "__main__":
     img_stack = np.stack(img_ch, axis=0) ## Stack all final images into a single image stack
 
     # Use tifffile to write the image stack to disk
-
     OmeTiffWriter.save(img_stack, 
                        args.output, 
                        dim_order = "CYX")

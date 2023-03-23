@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 #### This script takes a table of Molecular Cartography spots as input and projects them
-#### onto a reference image. The output is a stack of images, one for each spot, with 
-#### the spot projected onto the reference image shape.
+#### onto a reference image. It then dilates the points and blurs the image to create a
+#### spot image stack that can be used for training an ilastik model.
 
 
 ## Import packages
@@ -25,8 +25,8 @@ def project_spots(spot_table,img):
     img = np.zeros_like(img, dtype= 'int16')
     # Iterate through each spot in the table
     for spot in spot_table.itertuples():
-        # Add 1 to the pixel value at the spot's x,y coordinates
-        img[spot.y, spot.x] += 1
+        # Add the corresponding spot count to the pixel value at the spot's x,y coordinates
+        img[spot.y, spot.x] += spot.counts
     return img
 
 
@@ -139,7 +139,7 @@ if __name__ == "__main__":
     # Add a printed message that says "Projecting spots for gene X" for each gene in the list
     spots_2d_list = [project_spots(spots_zsum[spots_zsum.gene == gene], img) for gene in track(spots_zsum.gene.unique(), description='[green]Projecting spots...')]
     
-    # Sum spots in list
+    # Sum spots in list to create a single image
     spot_2d_stack = sum_spots(spots_2d_list)
     
     ## Expand pixels in the list to a tensor of size args.tensor_size
