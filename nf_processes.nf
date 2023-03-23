@@ -28,7 +28,7 @@ process PROJECT_SPOTS{
     debug false
     tag "Projecting spots $meta.id"
 
-    container 'rasterize_spots:latest'
+    container 'wuennemannflorian/rasterize_spots::latest'
 
     input: 
     tuple val(meta), path(spots)
