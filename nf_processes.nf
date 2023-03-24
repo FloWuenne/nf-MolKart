@@ -1,29 +1,3 @@
-process RSTR_SPOTS{
-    debug true
-    tag "Rasterizing spots $meta.id"
-
-    container 'rasterize_spots:latest'
-
-    input: 
-    tuple val(meta), path(spots)
-    path(img)
-    val(tensor_size)
-    val(genes)
-
-    output:
-    tuple val(meta), path("${spots.baseName}.sum.tiff"), emit: imgs_spots
-    // Add full image with all spots to quantify
-    // tuple val(meta2), path("${spots.baseName}.full_stack.tiff"), emit: imgs_spots
-
-    script:
-    """
-    rasterize_spots.py \
-    --input ${spots} \
-    --output ${spots.baseName}.sum.tiff \
-    --img_dims $img
-    """
-}
-
 process PROJECT_SPOTS{
     debug false
     tag "Projecting spots $meta.id"

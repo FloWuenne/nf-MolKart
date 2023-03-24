@@ -49,33 +49,11 @@ workflow {
         samples.spots.map(it -> it[2])
     )
 
-    // Check if spots should be blurred to use for pixel classification in ilastik
-    if (params.use_rasterize_spots) {
-            // Blur spots from Molecular Cartography data to use for pixel classification in ilastik
-        RSTR_SPOTS(samples.spots.map(it -> tuple(it[0],it[1]) ), 
-            samples.spots.map(it -> it[2])  , 
-            params.tensor_size,
-            params.genes)
-
-        // img2stack = MINDAGAP.out.tiff
-        //     .groupTuple()
-        //     .collect()
-        //     .join(RSTR_SPOTS.out.imgs_spots)
-        //     .map{it -> tuple(it[0], tuple(it[1] , it[2]).flatten().join(" "))}
-
-        img2stack = MINDAGAP_MINDAGAP.out.tiff
-            .map{
-                meta,tiff -> [meta.id,tiff]}
-            .groupTuple()
-            .join(RSTR_SPOTS.out.imgs_spots)
-            .map { id, tiffs -> tuple( [id: id], tiffs.sort{it.name} ) }
-    }else{
-        img2stack = MINDAGAP_MINDAGAP.out.tiff
+    img2stack = MINDAGAP_MINDAGAP.out.tiff
             .map{
                 meta,tiff -> [meta.id,tiff]}
             .groupTuple()
             .map { id, tiffs -> tuple([id: id], tiffs.sort{it.name} ) }
-    }
 
     // Create stacks from mindagap filled images and blurred spots
     MKIMG_STACKS(img2stack)
