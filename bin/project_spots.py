@@ -44,7 +44,7 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    spots = pd.read_table(args.input)
+    spots = pd.read_csv(args.input)
     img = tifffile.imread(args.img_dims)
     
     spots = spots[["y","x", "gene"]]
@@ -65,5 +65,5 @@ if __name__ == "__main__":
     
     #tifffile.imwrite(args.output, spot_2d_stack, metadata={'axes': 'CYX'})
     OmeTiffWriter.save(spot_2d_stack,
-                       args.sample_id + ".spots.tiff", 
+                       args.sample_id + ".tiff", 
                        dim_order = "CYX")

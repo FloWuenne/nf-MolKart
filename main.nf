@@ -100,7 +100,7 @@ workflow {
     // Quantify spot counts over masks
     MCQUANT(PROJECT_SPOTS.out.img_spots,
             ILASTIK_MULTICUT.out.out_tiff,
-            PROJECT_SPOTS.out.channel_names) // TODO : Add marker list for 2d spots here!
+            PROJECT_SPOTS.out.channel_names)
     }
 }
 

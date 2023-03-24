@@ -9,7 +9,7 @@ process PROJECT_SPOTS{
     path(img)
 
     output:
-    tuple val(meta), path("${spots.baseName}.spots.tiff"), emit: img_spots
+    tuple val(meta), path("${spots.baseName}.tiff"), emit: img_spots
     tuple val(meta), path("channel_names.csv"), emit: channel_names
 
     script:
