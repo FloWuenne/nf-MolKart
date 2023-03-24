@@ -40,6 +40,7 @@ workflow {
                     return tuple(meta, params.spots_path + meta.filename, params.imgs_path + meta.id + ".DAPI.small_crop.tiff" )
         }
 
+
     // Use Mindagap to fill gridlines in Molecular Cartography images and create a list of tuples with image id and path to filled images
     MINDAGAP_MINDAGAP(samples.image)
 
