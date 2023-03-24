@@ -37,7 +37,7 @@ workflow {
                 image : meta.type == "image"
                     return tuple(meta, params.imgs_path + meta.filename)
                 spots : meta.type == "spot_table"
-                    return tuple(meta, params.spots_path + meta.filename, params.imgs_path + meta.id + ".DAPI.small_crop.tiff" )
+                    return tuple(meta, params.spots_path + meta.filename, params.imgs_path + meta.id + ".DAPI.tiff" )
         }
 
 
