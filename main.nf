@@ -44,11 +44,6 @@ workflow {
     // Use Mindagap to fill gridlines in Molecular Cartography images and create a list of tuples with image id and path to filled images
     MINDAGAP_MINDAGAP(samples.image)
 
-    // Project spots from Molecular Cartography data to 2d numpy arrays for quantification
-    PROJECT_SPOTS(samples.spots.map(it -> tuple(it[0],it[1]) ),
-        samples.spots.map(it -> it[2])
-    )
-
     img2stack = MINDAGAP_MINDAGAP.out.tiff
             .map{
                 meta,tiff -> [meta.id,tiff]}
@@ -77,6 +72,11 @@ workflow {
         params.channel_ids)
 
     }else{
+    // Project spots from Molecular Cartography data to 2d numpy arrays for quantification
+    PROJECT_SPOTS(samples.spots.map(it -> tuple(it[0],it[1]) ),
+        samples.spots.map(it -> it[2])
+    )
+
     // Convert tiff stack to h5
     TIFF_TO_H5(
         APPLY_CLAHE_DASK.out.img_clahe,
