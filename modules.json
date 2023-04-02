@@ -1,0 +1,47 @@
+{
+  "name": "FloWuenne/nf_molcart",
+  "homePage": "https://github.com/FloWuenne/nf_molcart",
+  "repos": {
+    "https://github.com/nf-core/modules.git": {
+      "modules": {
+        "nf-core": {
+          "cellpose": {
+            "branch": "master",
+            "git_sha": "64f51d7635f83826d54af7ce208c55d1bd934e93",
+            "installed_by": ["modules"]
+          },
+          "deepcell/mesmer": {
+            "branch": "master",
+            "git_sha": "c0c79f6f8f027f75262a797525713178de4b60e7",
+            "installed_by": ["modules"]
+          },
+          "ilastik/multicut": {
+            "branch": "master",
+            "git_sha": "46404221c93365c2c98f4b07805797d1ca04622c",
+            "installed_by": ["modules"]
+          },
+          "ilastik/pixelclassification": {
+            "branch": "master",
+            "git_sha": "d4cb02034fec72013506221ff43ca4e53caa869c",
+            "installed_by": ["modules"]
+          },
+          "mcquant": {
+            "branch": "master",
+            "git_sha": "96ca9f700f2c8b1cf1f0765419a79c09ff53db08",
+            "installed_by": ["modules"]
+          },
+          "mindagap/mindagap": {
+            "branch": "master",
+            "git_sha": "aa90540e7ab96c723bee2688e0a4567d472335ef",
+            "installed_by": ["modules"]
+          },
+          "scimap/mcmicro": {
+            "branch": "master",
+            "git_sha": "423fa88f8e904b33cad103e8e69eb351b2a4ecb9",
+            "installed_by": ["modules"]
+          }
+        }
+      }
+    }
+  }
+}
