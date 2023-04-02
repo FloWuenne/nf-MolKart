@@ -6,7 +6,7 @@
 This is a step-by-step how the pipeline was initially set up. This does not need to be re-run when wanting to execute the pipeline and is intended more like a recipe to be able to reproduce pipeline setup if required.
 
 1) Create a dummy `.nf-core.yml` file to be able to install nf-core modules.
-2) Setup `main.nf` script
+2) Setup `main.nf` script and workflows folder
 3) Install nf-core components and copy the `include` statements for each tool into `main.nf`:
 
     - mindagap/mindagap: 
@@ -30,5 +30,3 @@ This is a step-by-step how the pipeline was initially set up. This does not need
     - scimap : 
         - `nf-core modules install scimap/mcmicro`
         - include { SCIMAP_MCMICRO } from '../modules/nf-core/scimap/mcmicro/main'
-
-4) 

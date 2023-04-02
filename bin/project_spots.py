@@ -44,7 +44,7 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    spots = pd.read_table(args.input)
+    spots = pd.read_csv(args.input)
     img = tifffile.imread(args.img_dims)
     
     spots = spots[["y","x", "gene"]]
