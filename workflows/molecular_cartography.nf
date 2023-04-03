@@ -66,15 +66,18 @@ workflow MOLECULAR_CARTOGRAPHY{
         samples.spots.map(it -> it[2])
     )
 
+    if (params.use_mesmer){
     // // Mesmer whole-cell segmentation
-    // DEEPCELL_MESMER(img2stack.map(it -> tuple(it[0],it[1][0])),
-    //                 [[:],[]])
-    //                 // img2stack.map(it -> tuple(it[0],it[1][1])
+    DEEPCELL_MESMER(img2stack.map(it -> tuple(it[0],it[1][0])),
+                    [[:],[]])
+                    // img2stack.map(it -> tuple(it[0],it[1][1])
 
     // // Quantify spot counts over masks
-    // MCQUANT_MESMER(PROJECT_SPOTS.out.img_spots,
-    //         DEEPCELL_MESMER.out.mask,
-    //         PROJECT_SPOTS.out.channel_names)
+    MCQUANT_MESMER(PROJECT_SPOTS.out.img_spots,
+            DEEPCELL_MESMER.out.mask,
+            PROJECT_SPOTS.out.channel_names)
+    }
+
 
     //SCIMAP_MCMICRO_MESMER(MCQUANT_MESMER.out.csv)
 
@@ -82,10 +85,20 @@ workflow MOLECULAR_CARTOGRAPHY{
     CELLPOSE(APPLY_CLAHE_DASK.out.img_clahe,
             [])
 
+    cellpose_mask = CELLPOSE.out.mask
+        .map{
+            meta,tiff -> [meta.id,tiff]}
+
+    mcquant_cellpose_in = PROJECT_SPOTS.out.img_spots
+        .join(PROJECT_SPOTS.out.channel_names)
+        .map{
+            meta,tiff,channels -> [meta.id,tiff,channels]}
+        .join(cellpose_mask)
+
     // Quantify spot counts over masks
-    MCQUANT_CELLPOSE(PROJECT_SPOTS.out.img_spots,
-            CELLPOSE.out.mask,
-            PROJECT_SPOTS.out.channel_names)
+    MCQUANT_CELLPOSE(mcquant_cellpose_in.map{it -> tuple([id:it[0]],it[1])},
+            mcquant_cellpose_in.map{it -> tuple([id:it[0]],it[3])},
+            mcquant_cellpose_in.map{it -> tuple([id:it[0]],it[2])})
 
     // Create Scimap object
     // SCIMAP_MCMICRO_CELLPOSE(MCQUANT_CELLPOSE.out.csv)
@@ -109,10 +122,22 @@ workflow MOLECULAR_CARTOGRAPHY{
         ILASTIK_PIXELCLASSIFICATION.out.output
         )
 
+
+    ILASTIK_MULTICUT.out.out_tiff
+        .map{
+            meta,tiff -> [meta.id,tiff]}
+        .set{ilastik_mask}
+
+    mcquant_multicut_in = PROJECT_SPOTS.out.img_spots
+        .join(PROJECT_SPOTS.out.channel_names)
+        .map{
+            meta,tiff,channels -> [meta.id,tiff,channels]}
+        .join(ilastik_mask)
+
     // Quantify spot counts over masks
-    MCQUANT_ILASTIK(PROJECT_SPOTS.out.img_spots,
-            ILASTIK_MULTICUT.out.out_tiff,
-            PROJECT_SPOTS.out.channel_names)
+    MCQUANT_ILASTIK(mcquant_multicut_in.map{it -> tuple([id:it[0]],it[1])},
+            mcquant_multicut_in.map{it -> tuple([id:it[0]],it[3])},
+            mcquant_multicut_in.map{it -> tuple([id:it[0]],it[2])})
     
     // Create Scimap object
     // SCIMAP_MCMICRO_ILASTIK(MCQUANT_ILASTIK.out.csv)
