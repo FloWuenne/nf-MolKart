@@ -115,11 +115,15 @@ workflow MOLECULAR_CARTOGRAPHY{
         tuple([id:"ilastik pixel classification"],params.ilastik_pixelprob_model),
         )
 
+    ilastik_multicut_in = TIFF_TO_H5.out.hdf5.map{meta,h5 -> [meta.id,h5]}
+        .join(ILASTIK_PIXELCLASSIFICATION.out.output.map{meta,pixelprob -> [meta.id,pixelprob]})
+        .view()
+
     // Run ilastik multicut on boundery information from probability maps created in previous step
     ILASTIK_MULTICUT(
-        TIFF_TO_H5.out.hdf5,
+        ilastik_multicut_in.map{it -> tuple([id:it[0]],it[1])},
         tuple([id:"ilastik multicut"],params.ilastik_multicut_model),
-        ILASTIK_PIXELCLASSIFICATION.out.output
+        ilastik_multicut_in.map{it -> tuple([id:it[0]],it[2])}
         )
 
 
