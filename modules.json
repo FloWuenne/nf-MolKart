@@ -7,7 +7,7 @@
         "nf-core": {
           "cellpose": {
             "branch": "master",
-            "git_sha": "64f51d7635f83826d54af7ce208c55d1bd934e93",
+            "git_sha": "d67b7b655bd89a04fb227b2cfb35832e8d1c3371",
             "installed_by": ["modules"]
           },
           "deepcell/mesmer": {
@@ -27,7 +27,7 @@
           },
           "mcquant": {
             "branch": "master",
-            "git_sha": "96ca9f700f2c8b1cf1f0765419a79c09ff53db08",
+            "git_sha": "811756ecb0068a4059094341abe6f44abc0bfec5",
             "installed_by": ["modules"]
           },
           "mindagap/mindagap": {

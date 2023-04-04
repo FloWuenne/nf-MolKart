@@ -78,7 +78,6 @@ workflow MOLECULAR_CARTOGRAPHY{
             PROJECT_SPOTS.out.channel_names)
     }
 
-
     //SCIMAP_MCMICRO_MESMER(MCQUANT_MESMER.out.csv)
 
     // Cellpose segmentation and quantification
@@ -117,7 +116,6 @@ workflow MOLECULAR_CARTOGRAPHY{
 
     ilastik_multicut_in = TIFF_TO_H5.out.hdf5.map{meta,h5 -> [meta.id,h5]}
         .join(ILASTIK_PIXELCLASSIFICATION.out.output.map{meta,pixelprob -> [meta.id,pixelprob]})
-        .view()
 
     // Run ilastik multicut on boundery information from probability maps created in previous step
     ILASTIK_MULTICUT(
