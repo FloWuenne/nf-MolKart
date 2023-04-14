@@ -90,6 +90,24 @@ process TIFF_TO_H5{
     """
 }
 
+process CREATE_TIFF_TRAINING{
+    container 'ghcr.io/schapirolabor/background_subtraction:v0.3.3'
+
+    publishDir params.tiff_training_dir, mode:"copy"
+
+    input:
+    tuple val(meta), path(image_stack)
+    tuple val(meta), path(crop_summary)
+
+    output:
+    tuple val(meta), path("*crop*.tiff"), emit: crop_tiff
+
+    script:
+    """
+    crop_tiff.py --input $image_stack --crop_summary $crop_summary
+    """
+}
+
 process MKIMG_STACKS{
     
     container 'kbestak/tiff_to_hdf5:v0.0.2'
@@ -108,22 +126,21 @@ process MKIMG_STACKS{
 
 // Process to extract sub stacks for training ilastik pixel classification
 process MK_ILASTIK_TRAINING_STACKS{
-    debug true
-    
     container 'labsyspharm/mcmicro-ilastik:1.6.1'
     
     publishDir params.ilastik_training_dir, mode:"copy"
 
     input:
-    tuple val(meta), path(image_stack)
-    tuple val(crop_size_x), val(crop_size_y)
+    tuple val(meta)         , path(image_stack)
+    tuple val(crop_size_x)  , val(crop_size_y)
     val   nonzero_fraction
     val   crop_amount
     val   num_channels
     val   channel_ids
 
     output:
-    tuple val(meta), path("*crop*.hdf5") , emit: ilastik_training
+    tuple val(meta), path("*crop*.hdf5")        , emit: ilastik_training
+    tuple val(meta), path("*_CropSummary.txt")  , emit: crop_summary
 
     script:
     """

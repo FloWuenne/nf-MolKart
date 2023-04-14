@@ -1,9 +1,14 @@
 ## This script contains the commands for a very simple way to update local modules from Github branches
 ## !!! Has to be executed from the same directory it's in, due to relative filepaths
 
+## mindaga/duplicatefinder
+mkdir mindagap/duplicatefinder
+wget -O ./mindagap/duplicatefinder/main.nf https://raw.githubusercontent.com/FloWuenne/modules/mindagap_duplicatefinder/modules/nf-core/mindagap/duplicatefinder/main.nf
+wget -O ./mindagap/duplicatefinder/meta.yml https://raw.githubusercontent.com/FloWuenne/modules/mindagap_duplicatefinder/modules/nf-core/mindagap/duplicatefinder/meta.yml
+
 ## mindagap/mindagap
-wget -O ./mindagap/mindagap/main.nf https://raw.githubusercontent.com/FloWuenne/modules/mindagap/modules/nf-core/mindagap/mindagap/main.nf
-wget -O ./mindagap/mindagap/meta.yml https://raw.githubusercontent.com/FloWuenne/modules/mindagap/modules/nf-core/mindagap/mindagap/meta.yml
+wget -O ./mindagap/duplicatefinder/main.nf https://raw.githubusercontent.com/FloWuenne/modules/mindagap/modules/nf-core/mindagap/mindagap/main.nf
+wget -O ./mindagap/duplicatefinder/meta.yml https://raw.githubusercontent.com/FloWuenne/modules/mindagap/modules/nf-core/mindagap/mindagap/meta.yml
 
 ## ilastik/pixelclassification
 mkdir ilastik

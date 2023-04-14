@@ -12,9 +12,11 @@ include { SCIMAP_MCMICRO as SCIMAP_MCMICRO_MESMER } from '../modules/nf-core/sci
 include { SCIMAP_MCMICRO as SCIMAP_MCMICRO_CELLPOSE } from '../modules/nf-core/scimap/mcmicro/main'
 include { SCIMAP_MCMICRO as SCIMAP_MCMICRO_ILASTIK } from '../modules/nf-core/scimap/mcmicro/main'
 
+/* local modules */
+include { MINDAGAP_DUPLICATEFINDER } from '../modules/local/mindagap/duplicatefinder'
 
 /* custom processes */
-include { PROJECT_SPOTS; MKIMG_STACKS; MK_ILASTIK_TRAINING_STACKS; TIFF_TO_H5; APPLY_CLAHE_DASK } from '../nf_processes.nf'
+include { PROJECT_SPOTS; MKIMG_STACKS; MK_ILASTIK_TRAINING_STACKS; TIFF_TO_H5; APPLY_CLAHE_DASK; CREATE_TIFF_TRAINING } from '../nf_processes.nf'
 
 workflow MOLECULAR_CARTOGRAPHY{
 
@@ -45,6 +47,7 @@ workflow MOLECULAR_CARTOGRAPHY{
     // Apply CLAHE to select channels
     APPLY_CLAHE_DASK(MKIMG_STACKS.out.mcimage)
 
+    //////////////////////////////////////////
     // Check if Ilastik training images should be created or training applied to the full image stacks
     if (params.create_training_set) {  
     
@@ -52,6 +55,7 @@ workflow MOLECULAR_CARTOGRAPHY{
     nr_chan = img2stack
         .map{meta, tiffs -> tiffs.size()}
 
+    // Create subsets of the image for training an ilastik model
     MK_ILASTIK_TRAINING_STACKS(
         APPLY_CLAHE_DASK.out.img_clahe,
         tuple(params.crop_size_x,params.crop_size_y),
@@ -60,10 +64,29 @@ workflow MOLECULAR_CARTOGRAPHY{
         nr_chan, 
         params.channel_ids)
 
+    // Combine CLAHE corrected image with crop_summary for making the same training tiff stacks as ilastik
+    tiff_crop = APPLY_CLAHE_DASK.out.img_clahe
+    .join(MK_ILASTIK_TRAINING_STACKS.out.crop_summary)
+
+    // Create tiff training sets for the same regions as ilastik for Cellpose training
+    CREATE_TIFF_TRAINING(
+        tiff_crop.map(it -> tuple(it[0],it[1])),
+        tiff_crop.map(it -> tuple(it[0],it[2])),
+        )
+    //////////////////////////////////////////
+
     }else{
+    // Mark duplicate spots from Molecular Cartography data
+    MINDAGAP_DUPLICATEFINDER(samples.spots.map(it -> tuple(it[0],it[1])))
+
+    // Join Duplicatefinder output with samples.spots DAPI image for image size in projecting spots
+    dedup_spots = MINDAGAP_DUPLICATEFINDER.out.marked_dups_spots
+    .join(samples.spots.map(it -> tuple(it[0],it[2])))
+
     // Project spots from Molecular Cartography data to 2d numpy arrays for quantification
-    PROJECT_SPOTS(samples.spots.map(it -> tuple(it[0],it[1]) ),
-        samples.spots.map(it -> it[2])
+    PROJECT_SPOTS(
+        dedup_spots.map(it -> tuple(it[0],it[1])),
+        dedup_spots.map(it -> it[2])
     )
 
     if (params.use_mesmer){

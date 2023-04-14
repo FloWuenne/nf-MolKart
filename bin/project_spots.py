@@ -15,7 +15,7 @@ from aicsimageio.writers import OmeTiffWriter
 # Make a function to project a table of spots with x,y coordinates onto a 2d plane based on reference image shape and add any duplicate spots to increase their pixel value in the output image
 def project_spots(spot_table,img):
     # Initialize an empty image with the same shape as the reference image
-    img = np.zeros_like(img, dtype= 'int16')
+    img = np.zeros_like(img, dtype= 'int8')
     # Iterate through each spot in the table
     for spot in spot_table.itertuples():
         # Add the corresponding spot count to the pixel value at the spot's x,y coordinates
@@ -44,10 +44,14 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    spots = pd.read_csv(args.input)
+    #spots = pd.read_csv(args.input)
+    spots = pd.read_csv(args.input, sep='\t', names=['x', 'y', 'z', 'gene'])
     img = tifffile.imread(args.img_dims)
     
     spots = spots[["y","x", "gene"]]
+    
+    ## Filter any genes marked with Duplicated
+    spots = spots[~spots.gene.str.contains("Duplicated")]
     
     # Sum spots by z-axis
     spots_zsum = spots.value_counts().to_frame('counts').reset_index()
