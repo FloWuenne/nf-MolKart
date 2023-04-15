@@ -91,9 +91,10 @@ process TIFF_TO_H5{
 }
 
 process CREATE_TIFF_TRAINING{
-    container 'ghcr.io/schapirolabor/background_subtraction:v0.3.3'
+    container 'labsyspharm/mcmicro-ilastik:1.6.1'
 
-    publishDir params.tiff_training_dir, mode:"copy"
+    publishDir params.tiff_training_dir, mode:"copy", pattern:"*crop*.tiff"
+    publishDir params.crop_overview_dir, mode:"copy", pattern:"*crop_overview.png"
 
     input:
     tuple val(meta), path(image_stack)
@@ -101,6 +102,7 @@ process CREATE_TIFF_TRAINING{
 
     output:
     tuple val(meta), path("*crop*.tiff"), emit: crop_tiff
+    tuple val(meta), path("*crop_overview.png")
 
     script:
     """
@@ -128,7 +130,8 @@ process MKIMG_STACKS{
 process MK_ILASTIK_TRAINING_STACKS{
     container 'labsyspharm/mcmicro-ilastik:1.6.1'
     
-    publishDir params.ilastik_training_dir, mode:"copy"
+    publishDir params.ilastik_training_dir, mode:"copy", pattern:"*crop*.hdf5"
+    publishDir params.crop_sum_dir, mode:"copy", pattern:"*_CropSummary.txt"
 
     input:
     tuple val(meta)         , path(image_stack)
