@@ -5,6 +5,7 @@ import tifffile as tiff
 import os
 import argparse
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Create a function to create crops from a tiff image and a dictionary of crop coordinates
 def create_crops(tiff_image,crop_dict):
@@ -14,11 +15,9 @@ def create_crops(tiff_image,crop_dict):
         basename = os.path.splitext(basename)[0]
         tiff.imsave(f"./{basename}_crop{index}.tiff",crop_image)
         ## Create a plot with all crop regions highlighted on the full image for easier selection
-        # print the shape of the first image in tiff_image to get the dimensions
-        print(tiff_image.shape)
-        # Combine the first and second dimension of the tiff image to get a 2D image
-        tiff_image_merged = tiff_image[0,:,:] + tiff_image[1,:,:]
-        plt.imshow(tiff_image_merged / tiff_image_merged.max(), cmap = "gray")
+        # Create a maximum projection of the channels in tiff_image
+        tiff_image_max = np.max(tiff_image, axis=0)
+        plt.imshow(tiff_image_max , cmap = "gray")
         plt.plot([crop[1][0],crop[1][1],crop[1][1],crop[1][0],crop[1][0]], [crop[0][0],crop[0][0],crop[0][1],crop[0][1],crop[0][0]], 
                 'red',
                 linewidth=1)
