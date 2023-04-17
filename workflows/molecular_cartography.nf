@@ -105,7 +105,7 @@ workflow MOLECULAR_CARTOGRAPHY{
 
     // Cellpose segmentation and quantification
     CELLPOSE(APPLY_CLAHE_DASK.out.img_clahe,
-            [])
+             params.cellpose_model)
 
     cellpose_mask = CELLPOSE.out.mask
         .map{
