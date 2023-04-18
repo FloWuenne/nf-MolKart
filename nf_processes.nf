@@ -122,7 +122,7 @@ process MKIMG_STACKS{
 
     script:
     """
-    make_img_stacks.py --input ${stacks} --output ${meta.id}.stack.tiff
+    make_img_stacks.py --input ${stacks} --output ./${meta.id}.stack.tiff
     """
 }
 
