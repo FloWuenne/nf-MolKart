@@ -96,15 +96,14 @@ workflow MOLECULAR_CARTOGRAPHY{
                     // img2stack.map(it -> tuple(it[0],it[1][1])
 
     // Pair Mesmer mask with spot stacks for quantification
-    mesmer_spots = PROJECT_SPOTS.out.img_spots
-        .join(DEEPCELL_MESMER.out.mask)
-        .join(PROJECT_SPOTS.out.channel_names)
-        .view()
+    spots_mesmer = PROJECT_SPOTS.out.img_spots.map(it -> tuple(it[0].id,it[1],it[0]))
+        .join(DEEPCELL_MESMER.out.mask.map(it -> tuple(it[0].id,it[1])))
+        .join(PROJECT_SPOTS.out.channel_names.map(it -> tuple(it[0].id,it[1])))
 
     // // Quantify spot counts over masks
-    MCQUANT_MESMER(mesmer_spots.map(it -> tuple(it[0],it[1])),
-            mesmer_spots.map(it -> tuple(it[0],it[2])),
-            mesmer_spots.map(it -> tuple(it[0],it[3]))
+    MCQUANT_MESMER(spots_mesmer.map(it -> tuple(it[2],it[1])),
+            spots_mesmer.map(it -> tuple(it[2],it[3])),
+            spots_mesmer.map(it -> tuple(it[2],it[4]))
     )
     }
 
