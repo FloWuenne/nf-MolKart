@@ -95,17 +95,24 @@ workflow MOLECULAR_CARTOGRAPHY{
                     [[:],[]])
                     // img2stack.map(it -> tuple(it[0],it[1][1])
 
+    // Pair Mesmer mask with spot stacks for quantification
+    mesmer_spots = PROJECT_SPOTS.out.img_spots
+        .join(DEEPCELL_MESMER.out.mask)
+        .join(PROJECT_SPOTS.out.channel_names)
+        .view()
+
     // // Quantify spot counts over masks
-    MCQUANT_MESMER(PROJECT_SPOTS.out.img_spots,
-            DEEPCELL_MESMER.out.mask,
-            PROJECT_SPOTS.out.channel_names)
+    MCQUANT_MESMER(mesmer_spots.map(it -> tuple(it[0],it[1])),
+            mesmer_spots.map(it -> tuple(it[0],it[2])),
+            mesmer_spots.map(it -> tuple(it[0],it[3]))
+    )
     }
 
     //SCIMAP_MCMICRO_MESMER(MCQUANT_MESMER.out.csv)
 
     // Cellpose segmentation and quantification
     CELLPOSE(APPLY_CLAHE_DASK.out.img_clahe,
-             params.cellpose_model)
+            params.cellpose_model)
 
     cellpose_mask = CELLPOSE.out.mask
         .map{
