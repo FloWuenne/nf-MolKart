@@ -65,7 +65,7 @@ if __name__ == "__main__":
     
     ## Write a csv file containing the channel names
     channel_names = spots_zsum.gene.unique().tolist()
-    pd.DataFrame(channel_names).to_csv("channel_names.csv", index=False, header=False)
+    pd.DataFrame(channel_names).to_csv("./channel_names.csv", index=False, header=False)
     
     #tifffile.imwrite(args.output, spot_2d_stack, metadata={'axes': 'CYX'})
     OmeTiffWriter.save(spot_2d_stack,
