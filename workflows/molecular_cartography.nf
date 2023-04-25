@@ -16,7 +16,7 @@ include { SCIMAP_MCMICRO as SCIMAP_MCMICRO_ILASTIK } from '../modules/nf-core/sc
 include { MINDAGAP_DUPLICATEFINDER } from '../modules/local/mindagap/duplicatefinder'
 
 /* custom processes */
-include { PROJECT_SPOTS; MKIMG_STACKS; MK_ILASTIK_TRAINING_STACKS; TIFF_TO_H5; APPLY_CLAHE_DASK; CREATE_TIFF_TRAINING } from '../nf_processes.nf'
+include { PROJECT_SPOTS; MKIMG_STACKS; MK_ILASTIK_TRAINING_STACKS; TIFF_TO_H5; APPLY_CLAHE_DASK; CREATE_TIFF_TRAINING; FILTER_MASK } from '../nf_processes.nf'
 
 workflow MOLECULAR_CARTOGRAPHY{
 
@@ -114,14 +114,20 @@ workflow MOLECULAR_CARTOGRAPHY{
             params.cellpose_model)
 
     cellpose_mask = CELLPOSE.out.mask
-        .map{
+        // .map{
+        //     meta,tiff -> [meta,tiff]}
+
+    // Size filter the cell mask from Cellpose
+    FILTER_MASK(cellpose_mask)
+    cellpose_mask_filt = FILTER_MASK.out.filt_mask
+            .map{
             meta,tiff -> [meta.id,tiff]}
 
     mcquant_cellpose_in = PROJECT_SPOTS.out.img_spots
         .join(PROJECT_SPOTS.out.channel_names)
         .map{
             meta,tiff,channels -> [meta.id,tiff,channels]}
-        .join(cellpose_mask)
+        .join(cellpose_mask_filt)
 
     // Quantify spot counts over masks
     MCQUANT_CELLPOSE(mcquant_cellpose_in.map{it -> tuple([id:it[0]],it[1])},

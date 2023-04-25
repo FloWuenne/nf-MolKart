@@ -1,3 +1,22 @@
+process FILTER_MASK{
+    debug true
+    tag "Filtering mask $meta.id"
+
+    container 'labsyspharm/mcmicro-ilastik:1.6.1'
+    
+    input:
+    tuple val(meta), path(mask_image)
+
+    output:
+    tuple val(meta), path("retained_masks.tiff") , emit: filt_mask
+    tuple val(meta), path("discarded_masks.tiff")
+
+    script:
+    """
+    filter_segmasks.py --image ${mask_image} --min_area 200 --max_area 50000
+    """
+}
+
 process PROJECT_SPOTS{
     debug false
     tag "Projecting spots $meta.id"
