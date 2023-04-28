@@ -1,4 +1,13 @@
-/* nf-core modules */
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    VALIDATE INPUTS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+def valid_params = [
+    segmentation        : ['mesmer_dapi', 'mesmer_wholecell', 'cellpose', 'ilastik_multicut'],
+]
+
 // MODULE: Installed directly from nf-core/modules
 include { MINDAGAP_MINDAGAP } from '../modules/nf-core/mindagap/mindagap/main'
 include { ILASTIK_PIXELCLASSIFICATION } from '../modules/nf-core/ilastik/pixelclassification/main'

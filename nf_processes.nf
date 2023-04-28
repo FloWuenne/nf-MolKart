@@ -33,7 +33,7 @@ process PROJECT_SPOTS{
 
     script:
     """
-    project_spots.py \
+    project_spots.dask.py \
     --input ${spots} \
     --sample_id ${spots.baseName} \
     --img_dims $img
