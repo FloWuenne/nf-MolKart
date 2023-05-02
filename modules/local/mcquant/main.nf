@@ -21,7 +21,6 @@ process MCQUANT {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
 
-    // TODO: Replace fixed version number by mcquant command. PR to Mcquant needed!
     """
     python /app/CommandSingleCellExtraction.py \
         --masks $mask \
