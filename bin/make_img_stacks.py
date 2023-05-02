@@ -7,6 +7,8 @@ import argparse
 import tifffile
 from aicsimageio.writers import OmeTiffWriter
 
+version = "0.0.1"
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -20,6 +22,13 @@ if __name__ == "__main__":
         "--output",
         dest="output",
         type=str,
+    )
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version="{version}".format(version=version),
+
     )
     
     args = parser.parse_args()
