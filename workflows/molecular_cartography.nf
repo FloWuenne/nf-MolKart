@@ -27,21 +27,30 @@ include { MINDAGAP_DUPLICATEFINDER } from '../modules/local/mindagap/duplicatefi
 /* custom processes */
 include { PROJECT_SPOTS; MKIMG_STACKS; MK_ILASTIK_TRAINING_STACKS; TIFF_TO_H5; APPLY_CLAHE_DASK; CREATE_TIFF_TRAINING; FILTER_MASK } from '../nf_processes.nf'
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    VALIDATE INPUT
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+// Check mandatory parameters
+if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
+
 workflow MOLECULAR_CARTOGRAPHY{
 
     // Read in sample sheet
-    samples = Channel.fromPath(params.sample_sheet)
+    samples = Channel.fromPath(ch_input)
         .splitCsv(header: true, strip : true)
         .branch{
             meta ->
-                image : meta.type == "image"
-                    return tuple(meta, params.imgs_path + meta.filename)
+                images : meta.type == "image"
+                    return tuple(meta, meta.filename)
                 spots : meta.type == "spot_table"
-                    return tuple(meta, params.spots_path + meta.filename, params.imgs_path + meta.id + ".DAPI.tiff" )
+                    return tuple(meta, meta.filename)
         }
 
     // Use Mindagap to fill gridlines in Molecular Cartography images and create a list of tuples with image id and path to filled images
-    MINDAGAP_MINDAGAP(samples.image, params.mindagap_boxsize, params.mindagap_loopnum)
+    MINDAGAP_MINDAGAP(samples.images, params.mindagap_boxsize, params.mindagap_loopnum)
 
     // Use the mindagap output to create an image stack from the filled images
     img2stack = MINDAGAP_MINDAGAP.out.tiff
@@ -87,10 +96,15 @@ workflow MOLECULAR_CARTOGRAPHY{
     }else{
     // Mark duplicate spots from Molecular Cartography data
     MINDAGAP_DUPLICATEFINDER(samples.spots.map(it -> tuple(it[0],it[1])))
+    
+image_id = samples.images
+    .map{meta,image -> tuple(meta.id,image)}
 
     // Join Duplicatefinder output with samples.spots DAPI image for image size in projecting spots
     dedup_spots = MINDAGAP_DUPLICATEFINDER.out.marked_dups_spots
-    .join(samples.spots.map(it -> tuple(it[0],it[2])))
+        .map{
+            meta,spots -> tuple(meta.id,spots)}
+        .join(image_id)
 
     // Project spots from Molecular Cartography data to 2d numpy arrays for quantification
     PROJECT_SPOTS(
@@ -135,7 +149,7 @@ workflow MOLECULAR_CARTOGRAPHY{
     mcquant_cellpose_in = PROJECT_SPOTS.out.img_spots
         .join(PROJECT_SPOTS.out.channel_names)
         .map{
-            meta,tiff,channels -> [meta.id,tiff,channels]}
+            meta,tiff,channels -> [meta,tiff,channels]}
         .join(cellpose_mask_filt)
 
     // Quantify spot counts over masks
@@ -177,7 +191,7 @@ workflow MOLECULAR_CARTOGRAPHY{
     mcquant_multicut_in = PROJECT_SPOTS.out.img_spots
         .join(PROJECT_SPOTS.out.channel_names)
         .map{
-            meta,tiff,channels -> [meta.id,tiff,channels]}
+            meta,tiff,channels -> [meta,tiff,channels]}
         .join(ilastik_mask)
 
     // Quantify spot counts over masks

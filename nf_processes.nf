@@ -19,7 +19,7 @@ process FILTER_MASK{
 
 process PROJECT_SPOTS{
     debug false
-    tag "Projecting spots $meta.id"
+    tag "Projecting spots $meta"
 
     container 'wuennemannflorian/project_spots:latest'
 
