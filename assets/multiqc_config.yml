@@ -1,0 +1,30 @@
+custom_data:
+    segmentation_stats:
+        id: 'segmentation_stats'
+        section_name: 'QC statistics from segmentation'
+        pconfig:
+            id: 'segmentation_stats_table'
+            namespace: 'Segmentation stats'
+        headers:
+            segmentation_method:
+                title: Segmentation method
+                description: 'Segmentation method'
+            total_cells:
+                title: Total Number of cells
+                description: 'Total # cells'
+            avg_area:
+                title: Average cell area
+                description: 'Average area per cell'
+            total_spots:
+                title: Total number of spots
+                description: 'Average number of spots assigned per cell'
+            spot_assign_per_cell:
+                title: Average spots assigned per cell
+                description: 'Average number of spots assigned per cell'
+            spot_assign_percent:
+                title: Total spots assigned
+                description: 'Total number of spots assigned'
+sp:
+    segmentation_stats:
+        fn: 'final_QC.all_samples.csv'
+        shared: true

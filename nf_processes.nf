@@ -29,7 +29,7 @@ process PROJECT_SPOTS{
 
     output:
     tuple val(meta), path("${spots.baseName}.tiff"), emit: img_spots
-    tuple val(meta), path("channel_names.csv"), emit: channel_names
+    tuple val(meta), path("${spots.baseName}.channel_names.csv"), emit: channel_names
 
     script:
     """
@@ -176,5 +176,29 @@ process MK_ILASTIK_TRAINING_STACKS{
         --crop_amount $crop_amount \
         --num_channels $num_channels \
         --channelIDs $channel_ids
+    """
+}
+
+// Process to generate QC measures for NF_MOLCART
+process MOLCART_QC{
+    container 'wuennemannflorian/project_spots:latest'
+
+    input:
+    tuple val(meta), path(mcquant)
+    tuple val(meta), path(spot_table)
+    val(segmethod)
+
+    output:
+    path("${meta.id}.${segmethod}.spot_QC.csv"), emit: qc
+
+    script:
+    def sample_id = "${meta.id}"
+    """
+    collect_QC.py \
+    --mcquant $mcquant \
+    --spots $spot_table \
+    --sample_id $sample_id \
+    --segmentation_method $segmethod \
+    --outdir .
     """
 }

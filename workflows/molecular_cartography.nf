@@ -8,6 +8,15 @@ def valid_params = [
     segmentation        : ['mesmer_dapi', 'mesmer_wholecell', 'cellpose', 'ilastik_multicut'],
 ]
 
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    CONFIG FILES
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+ch_multiqc_config          = Channel.fromPath("$projectDir/assets/multiqc_config.yml", checkIfExists: true)
+ch_multiqc_custom_config   = params.multiqc_config ? Channel.fromPath( params.multiqc_config, checkIfExists: true ) : Channel.empty()
+ch_multiqc_logo            = params.multiqc_logo   ? Channel.fromPath( params.multiqc_logo, checkIfExists: true ) : Channel.empty()
+
 // MODULE: Installed directly from nf-core/modules
 include { MINDAGAP_MINDAGAP } from '../modules/nf-core/mindagap/mindagap/main'
 include { ILASTIK_PIXELCLASSIFICATION } from '../modules/nf-core/ilastik/pixelclassification/main'
@@ -20,12 +29,13 @@ include { MCQUANT as MCQUANT_CELLPOSE } from '../modules/nf-core/mcquant/main'
 include { SCIMAP_MCMICRO as SCIMAP_MCMICRO_MESMER } from '../modules/nf-core/scimap/mcmicro/main'
 include { SCIMAP_MCMICRO as SCIMAP_MCMICRO_CELLPOSE } from '../modules/nf-core/scimap/mcmicro/main'
 include { SCIMAP_MCMICRO as SCIMAP_MCMICRO_ILASTIK } from '../modules/nf-core/scimap/mcmicro/main'
+include { MULTIQC } from '../modules/nf-core/multiqc/main'
 
 /* local modules */
 include { MINDAGAP_DUPLICATEFINDER } from '../modules/local/mindagap/duplicatefinder'
 
 /* custom processes */
-include { PROJECT_SPOTS; MKIMG_STACKS; MK_ILASTIK_TRAINING_STACKS; TIFF_TO_H5; APPLY_CLAHE_DASK; CREATE_TIFF_TRAINING; FILTER_MASK } from '../nf_processes.nf'
+include { PROJECT_SPOTS; MKIMG_STACKS; MK_ILASTIK_TRAINING_STACKS; TIFF_TO_H5; APPLY_CLAHE_DASK; CREATE_TIFF_TRAINING; FILTER_MASK; MOLCART_QC } from '../nf_processes.nf'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -38,7 +48,7 @@ if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input sample
 
 workflow MOLECULAR_CARTOGRAPHY{
 
-    // Read in sample sheet
+    // Read in sample sheet and create channels for images and spots
     samples = Channel.fromPath(ch_input)
         .splitCsv(header: true, strip : true)
         .branch{
@@ -97,8 +107,8 @@ workflow MOLECULAR_CARTOGRAPHY{
     // Mark duplicate spots from Molecular Cartography data
     MINDAGAP_DUPLICATEFINDER(samples.spots.map(it -> tuple(it[0],it[1])))
     
-image_id = samples.images
-    .map{meta,image -> tuple(meta.id,image)}
+    image_id = samples.images
+        .map{meta,image -> tuple(meta.id,image)}
 
     // Join Duplicatefinder output with samples.spots DAPI image for image size in projecting spots
     dedup_spots = MINDAGAP_DUPLICATEFINDER.out.marked_dups_spots
@@ -106,101 +116,128 @@ image_id = samples.images
             meta,spots -> tuple(meta.id,spots)}
         .join(image_id)
 
+    // Prepare spot table for QC
+    qc_spots = dedup_spots.map(it -> tuple([id: it[0]],it[1]))
+
     // Project spots from Molecular Cartography data to 2d numpy arrays for quantification
     PROJECT_SPOTS(
         dedup_spots.map(it -> tuple(it[0],it[1])),
         dedup_spots.map(it -> it[2])
     )
 
-    if (params.use_mesmer){
-    // // Mesmer whole-cell segmentation
-    DEEPCELL_MESMER(img2stack.map(it -> tuple(it[0],it[1][0])),
-                    [[:],[]])
-                    // img2stack.map(it -> tuple(it[0],it[1][1])
+    if (!params.skip_mesmer){
+        // // Mesmer whole-cell segmentation
+        DEEPCELL_MESMER(img2stack.map(it -> tuple(it[0],it[1][0])),
+                        [[:],[]])
+                        // img2stack.map(it -> tuple(it[0],it[1][1])
 
-    // Pair Mesmer mask with spot stacks for quantification
-    spots_mesmer = PROJECT_SPOTS.out.img_spots.map(it -> tuple(it[0].id,it[1],it[0]))
-        .join(DEEPCELL_MESMER.out.mask.map(it -> tuple(it[0].id,it[1])))
-        .join(PROJECT_SPOTS.out.channel_names.map(it -> tuple(it[0].id,it[1])))
+        // Pair Mesmer mask with spot stacks for quantification
+        spots_mesmer = PROJECT_SPOTS.out.img_spots.map(it -> tuple(it[0].id,it[1],it[0]))
+            .join(DEEPCELL_MESMER.out.mask.map(it -> tuple(it[0].id,it[1])))
+            .join(PROJECT_SPOTS.out.channel_names.map(it -> tuple(it[0].id,it[1])))
 
-    // // Quantify spot counts over masks
-    MCQUANT_MESMER(spots_mesmer.map(it -> tuple(it[2],it[1])),
-            spots_mesmer.map(it -> tuple(it[2],it[3])),
-            spots_mesmer.map(it -> tuple(it[2],it[4]))
-    )
+        // // Quantify spot counts over masks
+        MCQUANT_MESMER(spots_mesmer.map(it -> tuple(it[2],it[1])),
+                spots_mesmer.map(it -> tuple(it[2],it[3])),
+                spots_mesmer.map(it -> tuple(it[2],it[4]))
+                )
+        // Create Scimap object
+        //SCIMAP_MCMICRO_MESMER(MCQUANT_MESMER.out.csv)
     }
 
-    //SCIMAP_MCMICRO_MESMER(MCQUANT_MESMER.out.csv)
+    if (!params.skip_cellpose){
+         // Cellpose segmentation and quantification
+        CELLPOSE(APPLY_CLAHE_DASK.out.img_clahe,
+                params.cellpose_model)
 
-    // Cellpose segmentation and quantification
-    CELLPOSE(APPLY_CLAHE_DASK.out.img_clahe,
-            params.cellpose_model)
+        cellpose_mask = CELLPOSE.out.mask
+            // .map{
+            //     meta,tiff -> [meta,tiff]}
 
-    cellpose_mask = CELLPOSE.out.mask
-        // .map{
-        //     meta,tiff -> [meta,tiff]}
+        // Size filter the cell mask from Cellpose
+        FILTER_MASK(cellpose_mask)
+        cellpose_mask_filt = FILTER_MASK.out.filt_mask
+                .map{
+                meta,tiff -> [meta.id,tiff]}
 
-    // Size filter the cell mask from Cellpose
-    FILTER_MASK(cellpose_mask)
-    cellpose_mask_filt = FILTER_MASK.out.filt_mask
+        mcquant_cellpose_in = PROJECT_SPOTS.out.img_spots
+            .join(PROJECT_SPOTS.out.channel_names)
             .map{
-            meta,tiff -> [meta.id,tiff]}
+                meta,tiff,channels -> [meta,tiff,channels]}
+            .join(cellpose_mask_filt)
 
-    mcquant_cellpose_in = PROJECT_SPOTS.out.img_spots
-        .join(PROJECT_SPOTS.out.channel_names)
-        .map{
-            meta,tiff,channels -> [meta,tiff,channels]}
-        .join(cellpose_mask_filt)
+        // Quantify spot counts over masks
+        MCQUANT_CELLPOSE(mcquant_cellpose_in.map{it -> tuple([id:it[0]],it[1])},
+                mcquant_cellpose_in.map{it -> tuple([id:it[0]],it[3])},
+                mcquant_cellpose_in.map{it -> tuple([id:it[0]],it[2])})
 
-    // Quantify spot counts over masks
-    MCQUANT_CELLPOSE(mcquant_cellpose_in.map{it -> tuple([id:it[0]],it[1])},
-            mcquant_cellpose_in.map{it -> tuple([id:it[0]],it[3])},
-            mcquant_cellpose_in.map{it -> tuple([id:it[0]],it[2])})
+        qc_in_cellpose = MCQUANT_CELLPOSE.out.csv
+            .join(qc_spots)
 
-    // Create Scimap object
-    // SCIMAP_MCMICRO_CELLPOSE(MCQUANT_CELLPOSE.out.csv)
+        MOLCART_QC(
+            qc_in_cellpose.map{meta,mcquant,spots -> tuple(meta,mcquant)},
+            qc_in_cellpose.map{meta,mcquant,spots -> tuple(meta,spots)},
+            "cellpose"
+        )
 
+        // Create Scimap object
+        SCIMAP_MCMICRO_CELLPOSE(MCQUANT_CELLPOSE.out.csv)
+    }
     //// Ilastik segmentation and quantification
-    // Convert tiff stack to h5
-    TIFF_TO_H5(
-        APPLY_CLAHE_DASK.out.img_clahe,
-        params.channel_ids)
+        if (!params.skip_ilastik){
+            // Convert tiff stack to h5
+            TIFF_TO_H5(
+                APPLY_CLAHE_DASK.out.img_clahe,
+                params.channel_ids)
 
-    // Run ilastik pixel classification on image stacks
-    ILASTIK_PIXELCLASSIFICATION(
-        TIFF_TO_H5.out.hdf5,
-        tuple([id:"ilastik pixel classification"],params.ilastik_pixelprob_model),
+            // Run ilastik pixel classification on image stacks
+            ILASTIK_PIXELCLASSIFICATION(
+                TIFF_TO_H5.out.hdf5,
+                tuple([id:"ilastik pixel classification"],params.ilastik_pixelprob_model),
+                )
+
+            ilastik_multicut_in = TIFF_TO_H5.out.hdf5.map{meta,h5 -> [meta.id,h5]}
+                .join(ILASTIK_PIXELCLASSIFICATION.out.output.map{meta,pixelprob -> [meta.id,pixelprob]})
+
+            // Run ilastik multicut on boundery information from probability maps created in previous step
+            ILASTIK_MULTICUT(
+                ilastik_multicut_in.map{it -> tuple([id:it[0]],it[1])},
+                tuple([id:"ilastik multicut"],params.ilastik_multicut_model),
+                ilastik_multicut_in.map{it -> tuple([id:it[0]],it[2])}
+                )
+
+
+            ILASTIK_MULTICUT.out.out_tiff
+                .map{
+                    meta,tiff -> [meta.id,tiff]}
+                .set{ilastik_mask}
+
+            mcquant_multicut_in = PROJECT_SPOTS.out.img_spots
+                .join(PROJECT_SPOTS.out.channel_names)
+                .map{
+                    meta,tiff,channels -> [meta,tiff,channels]}
+                .join(ilastik_mask)
+
+            // Quantify spot counts over masks
+            MCQUANT_ILASTIK(mcquant_multicut_in.map{it -> tuple([id:it[0]],it[1])},
+                    mcquant_multicut_in.map{it -> tuple([id:it[0]],it[3])},
+                    mcquant_multicut_in.map{it -> tuple([id:it[0]],it[2])})
+            
+            // Create Scimap object
+            // SCIMAP_MCMICRO_ILASTIK(MCQUANT_ILASTIK.out.csv)
+        }
+
+    //// Final collection of QC parameters
+    // Gather QC results and create overview plots
+    qc_final = Channel.fromPath("$params.outdir/QC/*.csv")
+        .collectFile(name: 'final_QC.all_samples.csv',keepHeader: true, storeDir: "$params.outdir" )
+
+    MULTIQC (
+        qc_final,
+        ch_multiqc_config.ifEmpty([]),
+        ch_multiqc_custom_config.ifEmpty([]),
+        ch_multiqc_logo.collect().ifEmpty([])
         )
-
-    ilastik_multicut_in = TIFF_TO_H5.out.hdf5.map{meta,h5 -> [meta.id,h5]}
-        .join(ILASTIK_PIXELCLASSIFICATION.out.output.map{meta,pixelprob -> [meta.id,pixelprob]})
-
-    // Run ilastik multicut on boundery information from probability maps created in previous step
-    ILASTIK_MULTICUT(
-        ilastik_multicut_in.map{it -> tuple([id:it[0]],it[1])},
-        tuple([id:"ilastik multicut"],params.ilastik_multicut_model),
-        ilastik_multicut_in.map{it -> tuple([id:it[0]],it[2])}
-        )
-
-
-    ILASTIK_MULTICUT.out.out_tiff
-        .map{
-            meta,tiff -> [meta.id,tiff]}
-        .set{ilastik_mask}
-
-    mcquant_multicut_in = PROJECT_SPOTS.out.img_spots
-        .join(PROJECT_SPOTS.out.channel_names)
-        .map{
-            meta,tiff,channels -> [meta,tiff,channels]}
-        .join(ilastik_mask)
-
-    // Quantify spot counts over masks
-    MCQUANT_ILASTIK(mcquant_multicut_in.map{it -> tuple([id:it[0]],it[1])},
-            mcquant_multicut_in.map{it -> tuple([id:it[0]],it[3])},
-            mcquant_multicut_in.map{it -> tuple([id:it[0]],it[2])})
-    
-    // Create Scimap object
-    // SCIMAP_MCMICRO_ILASTIK(MCQUANT_ILASTIK.out.csv)
     }
 }
 

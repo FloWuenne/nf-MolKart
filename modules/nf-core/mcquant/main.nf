@@ -11,7 +11,7 @@ process MCQUANT {
     tuple val(meta3), path(markerfile)
 
     output:
-    tuple val(meta), path("*.csv"), emit: csv
+    tuple val(meta), path("*.mcquant_fix.csv"), emit: csv
     path "versions.yml"           , emit: versions
 
     when:
@@ -28,6 +28,12 @@ process MCQUANT {
         --channel_names $markerfile \
         --output . \
         $args
+
+    mapfile row_names < $markerfile
+    header_line=\$(head -n 1 ${image.baseName}_${mask.baseName}.csv)
+    column_indices=\$(echo "\${header_line}" | awk -v names="\${row_names[*]}" 'BEGIN{FS=",";OFS=","; split(names, nameArr, " ")} {for (i=1; i<=NF; i++) {exclude=0; for (name in nameArr) if (\$i == nameArr[name]) {exclude=1; break;} if (exclude == 0) printf "%d,", i}}')
+    column_indices="\${column_indices%,}"
+    cut -d',' -f"\${column_indices}" ${image.baseName}_${mask.baseName}.csv > ${prefix}.mcquant_fix.csv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

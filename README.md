@@ -1,5 +1,18 @@
 # README
-`nf_molcart` is a pipeline for processing Molecular Cartography data from Resolve Bioscience. It allows for processing of DAPI and antibody based stainings to use for cell segmentation using various different segmentation algorithms and then assigns and sums up RNA spots to cell masks. This pipeline is highly inspired by and uses components of MCMICRO.
+`nf-MolCart` is a pipeline for processing [Molecular Cartography data from Resolve Bioscience](https://resolvebiosciences.com/). It allows for processing of DAPI and additional antibody based stainings to use for cell segmentation using various different segmentation algorithms and then assigns and sums up RNA spots to cell masks. This pipeline is highly inspired by and uses components of the [MCMICRO](https://mcmicro.org/).
+
+# Pipeline usage
+
+| First Header                  | Second Header |
+| -------------                 | ------------- |
+| `--outdir`                    | Path to main directory to write pipeline output  |
+| `--segmentation`              | Comma separated list of segmentation methods to be used. Currently supported options = "mesmer_nuclear, measmer_wc, cellpose, ilastik"  |
+| `--ilastik_model_dir`         | Required if ilastik segmentation is selected. Path to ilastik pixel classification and multicut models. The model names by default are assumed to be `ilastik_pixelprob.ilp` and `ilastik_multicut.ilp` respectively.  |
+| `--cellpose_model`            | Optional if Cellpose segmentation is selected and a custom model should be used.  |
+| `--create_training_set`       | Boolean (True, False). Whether to run cell segmentation or to create training datasets in `.h5` format and .tiff format. |
+
+
+
 
 # Pipeline setup
 
