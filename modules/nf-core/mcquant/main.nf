@@ -12,6 +12,7 @@ process MCQUANT {
 
     output:
     tuple val(meta), path("*.mcquant_fix.csv"), emit: csv
+    tuple val(meta3), path(markerfile), emit : ex_cols
     path "versions.yml"           , emit: versions
 
     when:
