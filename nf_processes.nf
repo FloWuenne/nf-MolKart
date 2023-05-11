@@ -2,7 +2,7 @@ process FILTER_MASK{
     debug true
     tag "Filtering mask $meta.id"
 
-    container 'labsyspharm/mcmicro-ilastik:1.6.1'
+    container 'kbestak/tiff_to_hdf5:v0.0.2'
     
     input:
     tuple val(meta), path(mask_image)

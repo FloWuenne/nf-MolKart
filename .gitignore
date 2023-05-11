@@ -1,3 +1,5 @@
+segmodels/**
+nf_molcart_test
 .nextflow.pid
 .nextflow-console.log
 dag.mmd

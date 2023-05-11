@@ -35,7 +35,10 @@ include { MULTIQC } from '../modules/nf-core/multiqc/main'
 include { MINDAGAP_DUPLICATEFINDER } from '../modules/local/mindagap/duplicatefinder'
 
 /* custom processes */
-include { PROJECT_SPOTS; MKIMG_STACKS; MK_ILASTIK_TRAINING_STACKS; TIFF_TO_H5; APPLY_CLAHE_DASK; CREATE_TIFF_TRAINING; MOLCART_QC } from '../nf_processes.nf'
+include { PROJECT_SPOTS; MKIMG_STACKS; MK_ILASTIK_TRAINING_STACKS; TIFF_TO_H5; APPLY_CLAHE_DASK; CREATE_TIFF_TRAINING;  } from '../nf_processes.nf'
+include {MOLCART_QC as MOLCART_QC_MESMER} from '../nf_processes.nf'
+include {MOLCART_QC as MOLCART_QC_CELLPOSE} from '../nf_processes.nf'
+include {MOLCART_QC as MOLCART_QC_ILASTIK} from '../nf_processes.nf'
 include {FILTER_MASK as FILTER_MASK_MESMER} from '../nf_processes.nf'
 include {FILTER_MASK as FILTER_MASK_CELLPOSE} from '../nf_processes.nf'
 include {FILTER_MASK as FILTER_MASK_ILASTIK} from '../nf_processes.nf'
@@ -156,12 +159,22 @@ workflow MOLECULAR_CARTOGRAPHY{
                 mcquant_mesmer_in.map{it -> tuple([id:it[0]],it[3])},
                 mcquant_mesmer_in.map{it -> tuple([id:it[0]],it[2])}
                 )
+
+        qc_in_mesmer = MCQUANT_MESMER.out.csv
+            .join(qc_spots)
+
+        MOLCART_QC_MESMER(
+            qc_in_mesmer.map{meta,mcquant,spots -> tuple(meta,mcquant)},
+            qc_in_mesmer.map{meta,mcquant,spots -> tuple(meta,spots)},
+            "mesmer_nuclear"
+        )
                 
         // Create Scimap object
         //SCIMAP_MCMICRO_MESMER(MCQUANT_MESMER.out.csv)
     }
 
     if (!params.skip_cellpose){
+
          // Cellpose segmentation and quantification
         CELLPOSE(APPLY_CLAHE_DASK.out.img_clahe,
                 params.cellpose_model)
@@ -187,14 +200,14 @@ workflow MOLECULAR_CARTOGRAPHY{
         qc_in_cellpose = MCQUANT_CELLPOSE.out.csv
             .join(qc_spots)
 
-        MOLCART_QC(
+        MOLCART_QC_CELLPOSE(
             qc_in_cellpose.map{meta,mcquant,spots -> tuple(meta,mcquant)},
             qc_in_cellpose.map{meta,mcquant,spots -> tuple(meta,spots)},
             "cellpose"
         )
 
         // Create Scimap object
-        SCIMAP_MCMICRO_CELLPOSE(MCQUANT_CELLPOSE.out.csv)
+        // SCIMAP_MCMICRO_CELLPOSE(MCQUANT_CELLPOSE.out.csv)
     }
 
     if (!params.skip_ilastik){
@@ -236,6 +249,15 @@ workflow MOLECULAR_CARTOGRAPHY{
                 mcquant_ilastik_in.map{it -> tuple([id:it[0]],it[3])},
                 mcquant_ilastik_in.map{it -> tuple([id:it[0]],it[2])}
                     )
+
+            qc_in_ilastik = MCQUANT_ILASTIK.out.csv
+                .join(qc_spots)
+
+            MOLCART_QC_ILASTIK(
+                qc_in_ilastik.map{meta,mcquant,spots -> tuple(meta,mcquant)},
+                qc_in_ilastik.map{meta,mcquant,spots -> tuple(meta,spots)},
+                "ilastik_multicut"
+            )
             
             // Create Scimap object
             // SCIMAP_MCMICRO_ILASTIK(MCQUANT_ILASTIK.out.csv)
