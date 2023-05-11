@@ -268,8 +268,8 @@ workflow MOLECULAR_CARTOGRAPHY{
     // qc_final = Channel.fromPath("$params.outdir/QC/*.csv")
     //     .collectFile(name: 'final_QC.all_samples.csv',keepHeader: true, storeDir: "$params.outdir" )
 
-    qc_final = MOLCART_QC_MESMER.out.qc
-        .concat(MOLCART_QC_CELLPOSE.out.qc,MOLCART_QC_ILASTIK.out.qc)
+    qc_final = MOLCART_QC_MESMER.out.qc.ifEmpty(Channel.empty())
+        .concat(MOLCART_QC_CELLPOSE.out.qc.ifEmpty(Channel.empty()),MOLCART_QC_ILASTIK.out.qc.ifEmpty(Channel.empty()))
         .collectFile(name: 'final_QC.all_samples.csv',keepHeader: true, storeDir: "$params.outdir" )
 
     MULTIQC (
