@@ -60,9 +60,9 @@ workflow MOLECULAR_CARTOGRAPHY{
         .branch{
             meta ->
                 images : meta.type == "image"
-                    return tuple(meta, params.img_path + meta.filename)
+                    return tuple(meta, meta.filename)
                 spots : meta.type == "spot_table"
-                    return tuple(meta, params.spot_path + meta.filename)
+                    return tuple(meta, meta.filename)
         }
 
     // Use Mindagap to fill gridlines in Molecular Cartography images and create a list of tuples with image id and path to filled images
