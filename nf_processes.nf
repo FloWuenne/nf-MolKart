@@ -6,6 +6,8 @@ process FILTER_MASK{
     
     input:
     tuple val(meta), path(mask_image)
+    val(mask_min_area)
+    val(mask_max_area)
 
     output:
     tuple val(meta), path("retained_masks.tiff") , emit: filt_mask
@@ -13,7 +15,7 @@ process FILTER_MASK{
 
     script:
     """
-    filter_segmasks.py --image ${mask_image} --min_area 200 --max_area 50000
+    filter_segmasks.py --image ${mask_image} --min_area ${mask_min_area} --max_area ${mask_max_area}
     """
 }
 

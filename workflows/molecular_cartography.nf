@@ -134,7 +134,7 @@ workflow MOLECULAR_CARTOGRAPHY{
     if (!params.skip_mesmer){
         // // Mesmer whole-cell segmentation
         DEEPCELL_MESMER(img2stack.map(it -> tuple(it[0],it[1][0])),
-                        [[:],[]])
+                        img2stack.map(it -> tuple(it[0],it[1][1])))
                         // img2stack.map(it -> tuple(it[0],it[1][1])
 
         // Pair Mesmer mask with spot stacks for quantification
@@ -143,7 +143,7 @@ workflow MOLECULAR_CARTOGRAPHY{
         //     .join(PROJECT_SPOTS.out.channel_names.map(it -> tuple(it[0].id,it[1])))
 
         // Size filter the cell mask from Cellpose
-        FILTER_MASK_MESMER(DEEPCELL_MESMER.out.mask)
+        FILTER_MASK_MESMER(DEEPCELL_MESMER.out.mask, params.mask_min_area, params.mask_max_area)
 
         mesmer_mask_filt = FILTER_MASK_MESMER.out.filt_mask
             .map{meta,tiff -> [meta.id,tiff]}
@@ -180,7 +180,7 @@ workflow MOLECULAR_CARTOGRAPHY{
                 params.cellpose_model)
 
         // Size filter the cell mask from Cellpose
-        FILTER_MASK_CELLPOSE(CELLPOSE.out.mask)
+        FILTER_MASK_CELLPOSE(CELLPOSE.out.mask, params.mask_min_area, params.mask_max_area)
         
         cellpose_mask_filt = FILTER_MASK_CELLPOSE.out.filt_mask
                 .map{
@@ -233,7 +233,7 @@ workflow MOLECULAR_CARTOGRAPHY{
                 )
 
             // FILTER_MASK_ILASTIK(ILASTIK_MULTICUT.out.out_tiff)
-            FILTER_MASK_ILASTIK(ILASTIK_MULTICUT.out.out_tiff)
+            FILTER_MASK_ILASTIK(ILASTIK_MULTICUT.out.out_tiff, params.mask_min_area, params.mask_max_area)
 
             ilastik_mask_filt = FILTER_MASK_ILASTIK.out.filt_mask
                 .map{
@@ -265,7 +265,11 @@ workflow MOLECULAR_CARTOGRAPHY{
 
     //// Final collection of QC parameters
     // Gather QC results and create overview plots
-    qc_final = Channel.fromPath("$params.outdir/QC/*.csv")
+    // qc_final = Channel.fromPath("$params.outdir/QC/*.csv")
+    //     .collectFile(name: 'final_QC.all_samples.csv',keepHeader: true, storeDir: "$params.outdir" )
+
+    qc_final = MOLCART_QC_MESMER.out.qc
+        .concat(MOLCART_QC_CELLPOSE.out.qc,MOLCART_QC_ILASTIK.out.qc)
         .collectFile(name: 'final_QC.all_samples.csv',keepHeader: true, storeDir: "$params.outdir" )
 
     MULTIQC (

@@ -26,7 +26,7 @@ if __name__ == "__main__":
     # Make a command line interface for plot_size_filter with argparse and call the function with the arguments from the command line
     parser = argparse.ArgumentParser()
     parser.add_argument("-i","--image", help="path to image")
-    parser.add_argument("-min","--min_area", type=int, help="minimum mask area in pixels")
-    parser.add_argument("-max","--max_area", type=int, help="maximum mask area in pixels")
+    parser.add_argument("-min","--min_area",default = 100, type=int, help="minimum mask area in pixels")
+    parser.add_argument("-max","--max_area",default = 50000, type=int, help="maximum mask area in pixels")
     args = parser.parse_args()
     filter_masks(args.image, args.min_area, args.max_area)

@@ -25,15 +25,13 @@ def summarize_segmasks(mcquant,spots_summary):
     ## Calculate the % of spots assigned
     ## Subset mcquant for all columns with _intensity_sum in the column name and sum the column values
     spot_assign = mcquant.filter(regex='_intensity_sum').sum(axis=1)
-    spot_assign_total = sum(spot_assign)
-    spot_assign_per_cell = spot_assign_total / total_cells
-    spot_assign_percent = spot_assign_total / spots_summary[1]
+    spot_assign_total = int(sum(spot_assign))
+    spot_assign_per_cell =  total_cells and spot_assign_total / total_cells or 0
+    #spot_assign_per_cell = spot_assign_total / total_cells
+    spot_assign_percent = spot_assign_total / spots_summary[1] * 100
     
     return(total_cells,avg_area,spot_assign_per_cell,spot_assign_total,spot_assign_percent)
     
-    
-
-
 if __name__ == "__main__":
     # Write an argparse with input options mcquant_in, spots and output options outdir, sample_id
     parser = argparse.ArgumentParser()
@@ -79,7 +77,7 @@ if __name__ == "__main__":
 
     ## Create pandas data frame with one row per parameter and write each value in summary_segmentation to a new row in the data frame
     summary_df = pd.DataFrame(columns=['sample_id','segmentation_method','total_cells','avg_area','total_spots','spot_assign_per_cell','spot_assign_total','spot_assign_percent',])
-    summary_df.loc[0] = [args.sample_id,args.segmentation_method,summary_segmentation[0],summary_segmentation[1],summary_spots[1],summary_segmentation[2],summary_segmentation[3],summary_segmentation[4]]
+    summary_df.loc[0] = [args.sample_id + "_" + args.segmentation_method,args.segmentation_method,summary_segmentation[0],summary_segmentation[1],summary_spots[1],summary_segmentation[2],summary_segmentation[3],summary_segmentation[4]]
     
     # Write summary_df to a csv file
     summary_df.to_csv(f"{args.outdir}/{args.sample_id}.{args.segmentation_method}.spot_QC.csv", header = True, index=False)

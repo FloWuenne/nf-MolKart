@@ -21,9 +21,12 @@ custom_data:
             spot_assign_per_cell:
                 title: Average spots assigned per cell
                 description: 'Average number of spots assigned per cell'
-            spot_assign_percent:
+            spot_assign_total:
                 title: Total spots assigned
                 description: 'Total number of spots assigned'
+            spot_assign_percent:
+                title: Percentage of spots assigned to cell
+                description: '% of spots assigned to cells'
 sp:
     segmentation_stats:
         fn: 'final_QC.all_samples.csv'

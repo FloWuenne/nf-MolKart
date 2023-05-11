@@ -6,4 +6,4 @@ nextflow run main.nf -c ./nextflow.config \
 -with-tower \
 --outdir "./nf_molcart_test" \
 --ilastik_model_dir "$PWD/segmodels" \
---cellpose_model "$PWD/segmodels/CP_20230507_163903"
+--cellpose_model "$PWD/segmodels/CP_20230417_172320"
