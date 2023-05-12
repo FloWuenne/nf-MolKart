@@ -263,20 +263,20 @@ workflow MOLECULAR_CARTOGRAPHY{
             // SCIMAP_MCMICRO_ILASTIK(MCQUANT_ILASTIK.out.csv)
         }
 
-    //// Final collection of QC parameters
+    // Final collection of QC parameters
     // Gather QC results and create overview plots
     // qc_final = Channel.fromPath("$params.outdir/QC/*.csv")
     //     .collectFile(name: 'final_QC.all_samples.csv',keepHeader: true, storeDir: "$params.outdir" )
 
-    qc_final = MOLCART_QC_MESMER.out.qc.ifEmpty(Channel.empty())
-        .concat(MOLCART_QC_CELLPOSE.out.qc.ifEmpty(Channel.empty()),MOLCART_QC_ILASTIK.out.qc.ifEmpty(Channel.empty()))
+    qc_final = MOLCART_QC_MESMER.out.qc
+        .concat(MOLCART_QC_CELLPOSE.out.qc,MOLCART_QC_ILASTIK.qc.out)
         .collectFile(name: 'final_QC.all_samples.csv',keepHeader: true, storeDir: "$params.outdir" )
 
     MULTIQC (
         qc_final,
         ch_multiqc_config.ifEmpty([]),
         ch_multiqc_custom_config.ifEmpty([]),
-        ch_multiqc_logo.collect().ifEmpty([])
+       ch_multiqc_logo.collect().ifEmpty([])
         )
     }
 }
