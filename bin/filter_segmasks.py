@@ -3,13 +3,20 @@ import numpy as np
 import skimage.io as io
 from skimage.measure import label, regionprops
 import argparse
+import time
 
 # Function for plotting a mask and a filtered mask based on size next to it using plotly express
 def filter_masks(image, min_area, max_area):
+    print(image)
     image = io.imread(image)
+    start = time.time()
     label_img = label(image, background=0)
+    print(f'Label: {time.time() - start} seconds')
+    start = time.time()
     props = regionprops(label_img)
+    print(f'Regionprops: {time.time() - start} seconds')
     discarded_masks = np.copy(label_img)
+    start = time.time()
     for prop in props:
         if prop.area > min_area and prop.area < max_area:
             label_img[label_img == prop.label] = prop.label
@@ -17,8 +24,11 @@ def filter_masks(image, min_area, max_area):
         else:
             label_img[label_img == prop.label] = False
             discarded_masks[discarded_masks == prop.label] = prop.label
+    print(f'Loop: {time.time() - start} seconds')
+    start = time.time()
     io.imsave("retained_masks.tiff", label_img)
     io.imsave("discarded_masks.tiff", discarded_masks)
+    print(f'Saving: {time.time() - start} seconds')
     
     
 

@@ -269,7 +269,7 @@ workflow MOLECULAR_CARTOGRAPHY{
     //     .collectFile(name: 'final_QC.all_samples.csv',keepHeader: true, storeDir: "$params.outdir" )
 
     qc_final = MOLCART_QC_MESMER.out.qc
-        .concat(MOLCART_QC_CELLPOSE.out.qc,MOLCART_QC_ILASTIK.qc.out)
+        .concat(MOLCART_QC_CELLPOSE.out.qc,MOLCART_QC_ILASTIK.out.qc)
         .collectFile(name: 'final_QC.all_samples.csv',keepHeader: true, storeDir: "$params.outdir" )
 
     MULTIQC (
