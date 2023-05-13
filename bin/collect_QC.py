@@ -70,6 +70,7 @@ if __name__ == "__main__":
 
     ## Read in spot table
     spots = pd.read_table(args.spots, sep='\t', names=['x', 'y', 'z', 'gene'])
+    spots = spots[~spots.gene.str.contains("Duplicated")]
 
     ## Summarize spots table
     summary_spots = summarize_spots(spots)

@@ -1,5 +1,8 @@
 # README
-`nf-MolCart` is a pipeline for processing [Molecular Cartography data from Resolve Bioscience](https://resolvebiosciences.com/). It allows for processing of DAPI and additional antibody based stainings to use for cell segmentation using various different segmentation algorithms and then assigns and sums up RNA spots to cell masks. This pipeline is highly inspired by and uses components of the [MCMICRO](https://mcmicro.org/).
+`nf-MolCart` is a pipeline for processing [Molecular Cartography data from Resolve Bioscience](https://resolvebiosciences.com/). It allows for processing of DAPI and additional antibody based stainings to use for cell segmentation using various different segmentation algorithms and then assigns and sums up RNA spots to cell masks. This pipeline is highly inspired by and uses many similar components as [MCMICRO](https://mcmicro.org/).
+
+# How to run the pipeline
+
 
 # Pipeline usage
 
