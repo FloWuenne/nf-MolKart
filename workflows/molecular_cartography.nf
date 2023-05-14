@@ -38,7 +38,8 @@ include { MINDAGAP_DUPLICATEFINDER } from '../modules/local/mindagap/duplicatefi
 
 /* custom processes */
 include { PROJECT_SPOTS; MKIMG_STACKS; MK_ILASTIK_TRAINING_STACKS; TIFF_TO_H5; APPLY_CLAHE_DASK; CREATE_TIFF_TRAINING;  } from '../nf_processes.nf'
-include {MOLCART_QC as MOLCART_QC_MESMER} from '../nf_processes.nf'
+include {MOLCART_QC as MOLCART_QC_MESMER_NUCLEAR} from '../nf_processes.nf'
+include {MOLCART_QC as MOLCART_QC_MESMER_WHOLECELL} from '../nf_processes.nf'
 include {MOLCART_QC as MOLCART_QC_CELLPOSE} from '../nf_processes.nf'
 include {MOLCART_QC as MOLCART_QC_ILASTIK} from '../nf_processes.nf'
 include {FILTER_MASK as FILTER_MASK_MESMER_NUCLEAR} from '../nf_processes.nf'
@@ -160,7 +161,7 @@ workflow MOLECULAR_CARTOGRAPHY{
         qc_in_mesmer = MCQUANT_MESMER_NUCLEAR.out.csv
             .join(qc_spots)
 
-        MOLCART_QC_MESMER(
+        MOLCART_QC_MESMER_NUCLEAR(
             qc_in_mesmer.map{meta,mcquant,spots -> tuple(meta,mcquant)},
             qc_in_mesmer.map{meta,mcquant,spots -> tuple(meta,spots)},
             "mesmer_nuclear"
@@ -201,7 +202,7 @@ workflow MOLECULAR_CARTOGRAPHY{
         qc_in_mesmer = MCQUANT_MESMER_WHOLECELL.out.csv
             .join(qc_spots)
 
-        MOLCART_QC_MESMER(
+        MOLCART_QC_MESMER_WHOLECELL(
             qc_in_mesmer.map{meta,mcquant,spots -> tuple(meta,mcquant)},
             qc_in_mesmer.map{meta,mcquant,spots -> tuple(meta,spots)},
             "mesmer_wholecell"
@@ -303,8 +304,8 @@ workflow MOLECULAR_CARTOGRAPHY{
 
 
     /// Collect Quality metrics
-    qc_final = MOLCART_QC_MESMER.out.qc
-        .concat(MOLCART_QC_CELLPOSE.out.qc,MOLCART_QC_ILASTIK.out.qc)
+    qc_final = MOLCART_QC_MESMER_NUCLEAR.out.qc
+        .concat(MOLCART_QC_MESMER_WHOLECELL.out.qc,MOLCART_QC_CELLPOSE.out.qc,MOLCART_QC_ILASTIK.out.qc)
         .collectFile(name: 'final_QC.all_samples.csv',keepHeader: true, storeDir: "$params.outdir" )
 
     MULTIQC (
