@@ -28,7 +28,8 @@ include { MCQUANT as MCQUANT_ILASTIK } from '../modules/nf-core/mcquant/main'
 include { MCQUANT as MCQUANT_MESMER_NUCLEAR } from '../modules/nf-core/mcquant/main'
 include { MCQUANT as MCQUANT_MESMER_WHOLECELL } from '../modules/nf-core/mcquant/main'
 include { MCQUANT as MCQUANT_CELLPOSE } from '../modules/nf-core/mcquant/main'
-include { SCIMAP_MCMICRO as SCIMAP_MCMICRO_MESMER } from '../modules/nf-core/scimap/mcmicro/main'
+include { SCIMAP_MCMICRO as SCIMAP_MCMICRO_MESMER_NUCLEAR } from '../modules/nf-core/scimap/mcmicro/main'
+include { SCIMAP_MCMICRO as SCIMAP_MCMICRO_MESMER_WHOLECELL } from '../modules/nf-core/scimap/mcmicro/main'
 include { SCIMAP_MCMICRO as SCIMAP_MCMICRO_CELLPOSE } from '../modules/nf-core/scimap/mcmicro/main'
 include { SCIMAP_MCMICRO as SCIMAP_MCMICRO_ILASTIK } from '../modules/nf-core/scimap/mcmicro/main'
 include { MULTIQC } from '../modules/nf-core/multiqc/main'
@@ -168,7 +169,7 @@ workflow MOLECULAR_CARTOGRAPHY{
         )
                 
         // Create Scimap object
-        //SCIMAP_MCMICRO_MESMER(MCQUANT_MESMER.out.csv)
+        SCIMAP_MCMICRO_MESMER_NUCLEAR(MCQUANT_MESMER_NUCLEAR.out.csv)
     }
 
     if (!params.skip_mesmer_wholecell){
@@ -209,7 +210,7 @@ workflow MOLECULAR_CARTOGRAPHY{
         )
                 
         // Create Scimap object
-        //SCIMAP_MCMICRO_MESMER(MCQUANT_MESMER.out.csv)
+        SCIMAP_MCMICRO_MESMER_WHOLECELL(MCQUANT_MESMER_WHOLECELL.out.csv)
     }
 
     if (!params.skip_cellpose){
@@ -246,7 +247,7 @@ workflow MOLECULAR_CARTOGRAPHY{
         )
 
         // Create Scimap object
-        // SCIMAP_MCMICRO_CELLPOSE(MCQUANT_CELLPOSE.out.csv)
+        SCIMAP_MCMICRO_CELLPOSE(MCQUANT_CELLPOSE.out.csv)
     }
 
     if (!params.skip_ilastik){
@@ -299,7 +300,7 @@ workflow MOLECULAR_CARTOGRAPHY{
             )
             
             // Create Scimap object
-            // SCIMAP_MCMICRO_ILASTIK(MCQUANT_ILASTIK.out.csv)
+            SCIMAP_MCMICRO_ILASTIK(MCQUANT_ILASTIK.out.csv)
         }
 
 
