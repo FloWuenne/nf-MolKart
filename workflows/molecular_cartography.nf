@@ -21,7 +21,8 @@ ch_multiqc_logo            = params.multiqc_logo   ? Channel.fromPath( params.mu
 include { MINDAGAP_MINDAGAP } from '../modules/nf-core/mindagap/mindagap/main'
 include { ILASTIK_PIXELCLASSIFICATION } from '../modules/nf-core/ilastik/pixelclassification/main'
 include { ILASTIK_MULTICUT } from '../modules/nf-core/ilastik/multicut/main'
-include { DEEPCELL_MESMER } from '../modules/nf-core/deepcell/mesmer/main'
+include { DEEPCELL_MESMER as DEEPCELL_MESMER_NUCLEAR  } from '../modules/nf-core/deepcell/mesmer/main'
+include { DEEPCELL_MESMER as DEEPCELL_MESMER_WHOLECELL } from '../modules/nf-core/deepcell/mesmer/main'
 include { CELLPOSE } from '../modules/nf-core/cellpose/main'
 include { MCQUANT as MCQUANT_ILASTIK } from '../modules/nf-core/mcquant/main'
 include { MCQUANT as MCQUANT_MESMER } from '../modules/nf-core/mcquant/main'
@@ -39,7 +40,8 @@ include { PROJECT_SPOTS; MKIMG_STACKS; MK_ILASTIK_TRAINING_STACKS; TIFF_TO_H5; A
 include {MOLCART_QC as MOLCART_QC_MESMER} from '../nf_processes.nf'
 include {MOLCART_QC as MOLCART_QC_CELLPOSE} from '../nf_processes.nf'
 include {MOLCART_QC as MOLCART_QC_ILASTIK} from '../nf_processes.nf'
-include {FILTER_MASK as FILTER_MASK_MESMER} from '../nf_processes.nf'
+include {FILTER_MASK as FILTER_MASK_MESMER_NUCLEAR} from '../nf_processes.nf'
+include {FILTER_MASK as FILTER_MASK_MESMER_WHOLECELL} from '../nf_processes.nf'
 include {FILTER_MASK as FILTER_MASK_CELLPOSE} from '../nf_processes.nf'
 include {FILTER_MASK as FILTER_MASK_ILASTIK} from '../nf_processes.nf'
 
@@ -131,11 +133,46 @@ workflow MOLECULAR_CARTOGRAPHY{
         dedup_spots.map(it -> it[2])
     )
 
+    if (!params.skip_mesmer_nuclear){
+        // // Mesmer whole-cell segmentation
+        DEEPCELL_MESMER_NUCLEAR(img2stack.map(it -> tuple(it[0],it[1][0])),
+                        [])
+
+        // Size filter the cell mask from Cellpose
+        FILTER_MASK_MESMER_NUCLEAR(DEEPCELL_MESMER_NUCLEAR.out.mask, 0, 50000)
+
+        mesmer_mask_nuc_filt = FILTER_MASK_MESMER_NUCLEAR.out.filt_mask
+            .map{meta,tiff -> [meta.id,tiff]}
+
+        mcquant_mesmer_nuc_in = PROJECT_SPOTS.out.img_spots
+            .join(PROJECT_SPOTS.out.channel_names)
+            .map{
+                meta,tiff,channels -> [meta,tiff,channels]}
+            .join(mesmer_mask_nuc_filt)
+
+        // // Quantify spot counts over masks
+        MCQUANT_MESMER(mcquant_mesmer_nuc_in.map{it -> tuple([id:it[0]],it[1])},
+                mcquant_mesmer_nuc_in.map{it -> tuple([id:it[0]],it[3])},
+                mcquant_mesmer_nuc_in.map{it -> tuple([id:it[0]],it[2])}
+                )
+
+        qc_in_mesmer = MCQUANT_MESMER.out.csv
+            .join(qc_spots)
+
+        MOLCART_QC_MESMER(
+            qc_in_mesmer.map{meta,mcquant,spots -> tuple(meta,mcquant)},
+            qc_in_mesmer.map{meta,mcquant,spots -> tuple(meta,spots)},
+            "mesmer_nuclear"
+        )
+                
+        // Create Scimap object
+        //SCIMAP_MCMICRO_MESMER(MCQUANT_MESMER.out.csv)
+    }
+
     if (!params.skip_mesmer){
         // // Mesmer whole-cell segmentation
-        DEEPCELL_MESMER(img2stack.map(it -> tuple(it[0],it[1][0])),
+        DEEPCELL_MESMER_WHOLECELL(img2stack.map(it -> tuple(it[0],it[1][0])),
                         img2stack.map(it -> tuple(it[0],it[1][1])))
-                        // img2stack.map(it -> tuple(it[0],it[1][1])
 
         // Pair Mesmer mask with spot stacks for quantification
         // spots_mesmer = PROJECT_SPOTS.out.img_spots.map(it -> tuple(it[0].id,it[1],it[0]))
@@ -143,9 +180,9 @@ workflow MOLECULAR_CARTOGRAPHY{
         //     .join(PROJECT_SPOTS.out.channel_names.map(it -> tuple(it[0].id,it[1])))
 
         // Size filter the cell mask from Cellpose
-        FILTER_MASK_MESMER(DEEPCELL_MESMER.out.mask, params.mask_min_area, params.mask_max_area)
+        FILTER_MASK_MESMER_WHOLECELL(DEEPCELL_MESMER_WHOLECELL.out.mask, params.mask_min_area, params.mask_max_area)
 
-        mesmer_mask_filt = FILTER_MASK_MESMER.out.filt_mask
+        mesmer_mask_filt = FILTER_MASK_MESMER_WHOLECELL.out.filt_mask
             .map{meta,tiff -> [meta.id,tiff]}
 
         mcquant_mesmer_in = PROJECT_SPOTS.out.img_spots
@@ -166,7 +203,7 @@ workflow MOLECULAR_CARTOGRAPHY{
         MOLCART_QC_MESMER(
             qc_in_mesmer.map{meta,mcquant,spots -> tuple(meta,mcquant)},
             qc_in_mesmer.map{meta,mcquant,spots -> tuple(meta,spots)},
-            "mesmer_nuclear"
+            "mesmer_wholecell"
         )
                 
         // Create Scimap object
@@ -263,11 +300,8 @@ workflow MOLECULAR_CARTOGRAPHY{
             // SCIMAP_MCMICRO_ILASTIK(MCQUANT_ILASTIK.out.csv)
         }
 
-    // Final collection of QC parameters
-    // Gather QC results and create overview plots
-    // qc_final = Channel.fromPath("$params.outdir/QC/*.csv")
-    //     .collectFile(name: 'final_QC.all_samples.csv',keepHeader: true, storeDir: "$params.outdir" )
 
+    /// Collect Quality metrics
     qc_final = MOLCART_QC_MESMER.out.qc
         .concat(MOLCART_QC_CELLPOSE.out.qc,MOLCART_QC_ILASTIK.out.qc)
         .collectFile(name: 'final_QC.all_samples.csv',keepHeader: true, storeDir: "$params.outdir" )
