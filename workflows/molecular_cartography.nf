@@ -25,7 +25,8 @@ include { DEEPCELL_MESMER as DEEPCELL_MESMER_NUCLEAR  } from '../modules/nf-core
 include { DEEPCELL_MESMER as DEEPCELL_MESMER_WHOLECELL } from '../modules/nf-core/deepcell/mesmer/main'
 include { CELLPOSE } from '../modules/nf-core/cellpose/main'
 include { MCQUANT as MCQUANT_ILASTIK } from '../modules/nf-core/mcquant/main'
-include { MCQUANT as MCQUANT_MESMER } from '../modules/nf-core/mcquant/main'
+include { MCQUANT as MCQUANT_MESMER_NUCLEAR } from '../modules/nf-core/mcquant/main'
+include { MCQUANT as MCQUANT_MESMER_WHOLECELL } from '../modules/nf-core/mcquant/main'
 include { MCQUANT as MCQUANT_CELLPOSE } from '../modules/nf-core/mcquant/main'
 include { SCIMAP_MCMICRO as SCIMAP_MCMICRO_MESMER } from '../modules/nf-core/scimap/mcmicro/main'
 include { SCIMAP_MCMICRO as SCIMAP_MCMICRO_CELLPOSE } from '../modules/nf-core/scimap/mcmicro/main'
@@ -151,12 +152,12 @@ workflow MOLECULAR_CARTOGRAPHY{
             .join(mesmer_mask_nuc_filt)
 
         // // Quantify spot counts over masks
-        MCQUANT_MESMER(mcquant_mesmer_nuc_in.map{it -> tuple([id:it[0]],it[1])},
+        MCQUANT_MESMER_NUCLEAR(mcquant_mesmer_nuc_in.map{it -> tuple([id:it[0]],it[1])},
                 mcquant_mesmer_nuc_in.map{it -> tuple([id:it[0]],it[3])},
                 mcquant_mesmer_nuc_in.map{it -> tuple([id:it[0]],it[2])}
                 )
 
-        qc_in_mesmer = MCQUANT_MESMER.out.csv
+        qc_in_mesmer = MCQUANT_MESMER_NUCLEAR.out.csv
             .join(qc_spots)
 
         MOLCART_QC_MESMER(
@@ -192,12 +193,12 @@ workflow MOLECULAR_CARTOGRAPHY{
             .join(mesmer_mask_filt)
 
         // // Quantify spot counts over masks
-        MCQUANT_MESMER(mcquant_mesmer_in.map{it -> tuple([id:it[0]],it[1])},
+        MCQUANT_MESMER_WHOLECELL(mcquant_mesmer_in.map{it -> tuple([id:it[0]],it[1])},
                 mcquant_mesmer_in.map{it -> tuple([id:it[0]],it[3])},
                 mcquant_mesmer_in.map{it -> tuple([id:it[0]],it[2])}
                 )
 
-        qc_in_mesmer = MCQUANT_MESMER.out.csv
+        qc_in_mesmer = MCQUANT_MESMER_WHOLECELL.out.csv
             .join(qc_spots)
 
         MOLCART_QC_MESMER(
@@ -310,7 +311,7 @@ workflow MOLECULAR_CARTOGRAPHY{
         qc_final,
         ch_multiqc_config.ifEmpty([]),
         ch_multiqc_custom_config.ifEmpty([]),
-       ch_multiqc_logo.collect().ifEmpty([])
+        ch_multiqc_logo.collect().ifEmpty([])
         )
     }
 }
