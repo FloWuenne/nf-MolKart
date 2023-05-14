@@ -138,7 +138,7 @@ workflow MOLECULAR_CARTOGRAPHY{
     if (!params.skip_mesmer_nuclear){
         // // Mesmer whole-cell segmentation
         DEEPCELL_MESMER_NUCLEAR(img2stack.map(it -> tuple(it[0],it[1][0])),
-                        [])
+                        [[:],[]])
 
         // Size filter the cell mask from Cellpose
         FILTER_MASK_MESMER_NUCLEAR(DEEPCELL_MESMER_NUCLEAR.out.mask, 0, 50000)
@@ -171,7 +171,7 @@ workflow MOLECULAR_CARTOGRAPHY{
         //SCIMAP_MCMICRO_MESMER(MCQUANT_MESMER.out.csv)
     }
 
-    if (!params.skip_mesmer){
+    if (!params.skip_mesmer_wholecell){
         // // Mesmer whole-cell segmentation
         DEEPCELL_MESMER_WHOLECELL(img2stack.map(it -> tuple(it[0],it[1][0])),
                         img2stack.map(it -> tuple(it[0],it[1][1])))
