@@ -169,7 +169,7 @@ workflow MOLECULAR_CARTOGRAPHY{
         )
                 
         // Create Scimap object
-        SCIMAP_MCMICRO_MESMER_NUCLEAR(MCQUANT_MESMER_NUCLEAR.out.csv)
+        // SCIMAP_MCMICRO_MESMER_NUCLEAR(MCQUANT_MESMER_NUCLEAR.out.csv)
     }
 
     if (!params.skip_mesmer_wholecell){
@@ -210,7 +210,7 @@ workflow MOLECULAR_CARTOGRAPHY{
         )
                 
         // Create Scimap object
-        SCIMAP_MCMICRO_MESMER_WHOLECELL(MCQUANT_MESMER_WHOLECELL.out.csv)
+        // SCIMAP_MCMICRO_MESMER_WHOLECELL(MCQUANT_MESMER_WHOLECELL.out.csv)
     }
 
     if (!params.skip_cellpose){
@@ -247,7 +247,7 @@ workflow MOLECULAR_CARTOGRAPHY{
         )
 
         // Create Scimap object
-        SCIMAP_MCMICRO_CELLPOSE(MCQUANT_CELLPOSE.out.csv)
+        // SCIMAP_MCMICRO_CELLPOSE(MCQUANT_CELLPOSE.out.csv)
     }
 
     if (!params.skip_ilastik){
@@ -300,7 +300,7 @@ workflow MOLECULAR_CARTOGRAPHY{
             )
             
             // Create Scimap object
-            SCIMAP_MCMICRO_ILASTIK(MCQUANT_ILASTIK.out.csv)
+            // SCIMAP_MCMICRO_ILASTIK(MCQUANT_ILASTIK.out.csv)
         }
 
 
