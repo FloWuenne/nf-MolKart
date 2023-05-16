@@ -305,6 +305,7 @@ workflow MOLECULAR_CARTOGRAPHY{
 
 
     /// Collect Quality metrics
+    if (!params.skip_multiqc) {
     qc_final = MOLCART_QC_MESMER_NUCLEAR.out.qc
         .concat(MOLCART_QC_MESMER_WHOLECELL.out.qc,MOLCART_QC_CELLPOSE.out.qc,MOLCART_QC_ILASTIK.out.qc)
         .collectFile(name: 'final_QC.all_samples.csv',keepHeader: true, storeDir: "$params.outdir" )
@@ -315,6 +316,7 @@ workflow MOLECULAR_CARTOGRAPHY{
         ch_multiqc_custom_config.ifEmpty([]),
         ch_multiqc_logo.collect().ifEmpty([])
         )
+        }
     }
 }
 

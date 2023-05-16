@@ -1,10 +1,17 @@
 # README
-`nf-MolCart` is a pipeline for processing [Molecular Cartography data from Resolve Bioscience](https://resolvebiosciences.com/). It allows for processing of DAPI and additional antibody based stainings to use for cell segmentation using various different segmentation algorithms and then assigns and sums up RNA spots to cell masks. This pipeline is highly inspired by and uses many similar components as [MCMICRO](https://mcmicro.org/).
+
+## !!! This pipeline is in active development. Please feel free to use, but be ware that things can change drastically.
+
+`nf-MolCart` is a pipeline for processing [Molecular Cartography data from Resolve Bioscience](https://resolvebiosciences.com/). It allows for processing of DAPI and additional antibody based membrane stainings to use for cell segmentation. Nf-MolCart currently supports three different segmentation algorithms (Mesmer, Cellpose and Ilastik Multicut). After segmentation, deduplicated RNA spots are assigned to cell masks for downstream processing. This pipeline is highly inspired by and uses many similar components as [MCMICRO](https://mcmicro.org/).
 
 # How to run the pipeline
 
 
 # Pipeline usage
+
+## Mandatory arguments
+
+There are a couple of mandatory arguments you have to set for the pipeline to work:
 
 | First Header                  | Second Header |
 | -------------                 | ------------- |
@@ -14,35 +21,9 @@
 | `--cellpose_model`            | Optional if Cellpose segmentation is selected and a custom model should be used.  |
 | `--create_training_set`       | Boolean (True, False). Whether to run cell segmentation or to create training datasets in `.h5` format and .tiff format. |
 
+## Optional arguments
 
 
 
-# Pipeline setup
-
-This is a step-by-step how the pipeline was initially set up. This does not need to be re-run when wanting to execute the pipeline and is intended more like a recipe to be able to reproduce pipeline setup if required.
-
-1) Create a dummy `.nf-core.yml` file to be able to install nf-core modules.
-2) Setup `main.nf` script and workflows folder
-3) Install nf-core components and copy the `include` statements for each tool into `main.nf`:
-
-    - mindagap/mindagap: 
-        - `nf-core modules install mindagap/mindagap`
-        - include { MINDAGAP_MINDAGAP } from '../modules/nf-core/mindagap/mindagap/main'
-    - ilastik/pixelclassification: 
-        - `nf-core modules install ilastik/pixelclassification`
-        - include { ILASTIK_PIXELCLASSIFICATION } from '../modules/nf-core/ilastik/pixelclassification/main'
-    - ilastik/multicut: 
-        - `nf-core modules install ilastik/multicut`
-        - include { ILASTIK_MULTICUT } from '../modules/nf-core/ilastik/multicut/main'
-    - deepcell/mesmer : 
-        - `nf-core modules install deepcell/mesmer`
-        - include { DEEPCELL_MESMER } from '../modules/nf-core/deepcell/mesmer/main'
-    - cellpose : 
-        - `nf-core modules install cellpose`
-        - include { CELLPOSE } from '../modules/nf-core/cellpose/main'
-    - mcquant : 
-        - `nf-core modules install mcquant`
-        - include { MCQUANT } from '../modules/nf-core/mcquant/main'
-    - scimap : 
-        - `nf-core modules install scimap/mcmicro`
-        - include { SCIMAP_MCMICRO } from '../modules/nf-core/scimap/mcmicro/main'
+# Citation
+If you use this pipeline in your research, please cite this github repository.
