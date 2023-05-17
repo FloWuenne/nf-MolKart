@@ -177,11 +177,6 @@ workflow MOLECULAR_CARTOGRAPHY{
         DEEPCELL_MESMER_WHOLECELL(img2stack.map(it -> tuple(it[0],it[1][0])),
                         img2stack.map(it -> tuple(it[0],it[1][1])))
 
-        // Pair Mesmer mask with spot stacks for quantification
-        // spots_mesmer = PROJECT_SPOTS.out.img_spots.map(it -> tuple(it[0].id,it[1],it[0]))
-        //     .join(DEEPCELL_MESMER.out.mask.map(it -> tuple(it[0].id,it[1])))
-        //     .join(PROJECT_SPOTS.out.channel_names.map(it -> tuple(it[0].id,it[1])))
-
         // Size filter the cell mask from Cellpose
         FILTER_MASK_MESMER_WHOLECELL(DEEPCELL_MESMER_WHOLECELL.out.mask, params.mask_min_area, params.mask_max_area)
 
