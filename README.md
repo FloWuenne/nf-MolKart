@@ -1,6 +1,6 @@
 # README
 
-## !!! This pipeline is in active development. Please feel free to use, but be ware that things can change drastically.
+## !!! This pipeline is in active development. Please feel free to use, but be aware that things can change drastically during development if you plan to use this pipeline !!!
 
 `nf-MolCart` is a pipeline for processing [Molecular Cartography data from Resolve Bioscience](https://resolvebiosciences.com/). It allows for processing of DAPI and additional antibody based membrane stainings to use for cell segmentation. Nf-MolCart currently supports three different segmentation algorithms (Mesmer, Cellpose and Ilastik Multicut). After segmentation, deduplicated RNA spots are assigned to cell masks for downstream processing. This pipeline is highly inspired by and uses many similar components as [MCMICRO](https://mcmicro.org/).
 
